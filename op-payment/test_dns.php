@@ -21,3 +21,5 @@ echo "HTTP Code: $http_code\nResponse: " . var_export($response, true) . "\nErro
 
 file_put_contents(__DIR__ . '/test_dns.log', date('Y-m-d H:i:s') . " DNS: $ip, HTTP Code: $http_code, Response: " . var_export($response, true) . ", Error: $error\n", FILE_APPEND);
 ?>
+
+
