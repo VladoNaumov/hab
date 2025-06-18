@@ -1,0 +1,110 @@
+/* Навигация public/css/navbar.css */
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: linear-gradient(180deg, #1c2526, #2c3e50);
+    min-height: 60px;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: white !important;
+    transition: color 0.3s;
+}
+.navbar-brand:hover {
+    color: #ff4444 !important;
+}
+
+.nav-link {
+    color: white !important;
+    position: relative;
+    transition: color 0.3s;
+    padding-bottom: 5px;
+}
+.nav-link:hover {
+    color: #ff4444 !important;
+}
+.nav-link.active {
+    font-weight: 700;
+}
+
+.nav-link:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #ff4444;
+    transition: width 0.3s;
+}
+.nav-link:hover:after {
+    width: 100%;
+}
+
+.navbar-toggler {
+    border-color: white;
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.input-group.search-group {
+    margin-right: 1.5rem;
+}
+.input-group.search-group .input-group-text {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+.input-group.search-group .input-group-text:hover .btn-link {
+    color: #ff4444 !important;
+}
+.input-group.search-group .input-group-text .btn-link {
+    color: white !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    text-decoration: none;
+}
+.input-group.search-group .input-group-text .btn-link .bi-search {
+    color: white !important;
+}
+.input-group.search-group .input-group-text .btn-link:hover .bi-search {
+    color: #ff4444 !important;
+}
+.input-group.search-group .form-control {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    transition: border-color 0.3s;
+}
+.input-group.search-group .form-control::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+.input-group.search-group .form-control:focus {
+    border-color: white;
+    box-shadow: 0 0 5px rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.2);
+}
+
+.nav-link.search-active {
+    margin-left: 4rem;
+}
+
+.nav-link.cart-icon {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+.nav-link.cart-icon .bi-cart {
+    font-size: 1.2rem;
+}
+.nav-link.cart-icon .cart-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    font-size: 0.8rem;
+    vertical-align: top;
+}
