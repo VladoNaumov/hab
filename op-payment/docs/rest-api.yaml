@@ -1,0 +1,3484 @@
+openapi: 3.0.1
+info:
+  title: OP Online Payment - REST API
+  description: |
+    OP Online Payment allows merchants and payment service providers to
+    collect e-commerce payments as credit transfers to an OP account from both
+    OP customers and other banks' customers (add-on service). The OP Online
+    Payment service includes the collection of payments and the making of
+    payment status requests and payment refunds.
+
+    <br/>OP Online Payment API's documentation consists of three parts:
+    * REST API: initiation of online payments as well as refunds and status
+    queries
+    * [Browser flow API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API):
+    initiation of the payment flow in the browser
+    * [Merchant callback API](https://op-developer.fi/docs/api/6wcXukrFrP1FglcJsNNzYe/Merchant%20callback%20API):
+    an optional service for receiving notifications on the payment status changes
+
+    <br/>OP Online Payment service flow:
+
+    1. The merchant or payment service provider initiates an online payment
+    process by using the [Create payment](#operation/newPayment) operation.
+
+    2. The merchant or payment service provider redirects the customer’s browser
+    to the [Browser flow
+    API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API).
+
+    3. After a successful payment the customer is redirected back to the web
+    store's return URL given in the [Create payment](#operation/newPayment) operation.
+
+    4. As an optional service, the OP Online Payment service can make a callback
+    to the merchant or payment service provider's Callback API (to `b2bBackend`
+    URL given in the [Create payment](#operation/newPayment) operation). We highly recommend
+    implementing the [Merchant callback
+    API](https://op-developer.fi/docs/api/6wcXukrFrP1FglcJsNNzYe/Merchant%20callback%20API) to ensure that the payment status
+    will be received even if the customer’s browser does not come back to the
+    shop for some reason (e.g. customer closes the browser or moves to another
+    site).
+
+    5. The merchant or payment service provider can also query a payment status
+    with the [Payment status](#operation/getStatus) operation.
+
+    6. The merchant or payment service provider can return a payment with the
+    [Refund](#operation/refund) operation.
+
+    ## Authentication
+
+    The OP Online Payment REST API authenticates the caller by validating the
+    API key (parameter `x-api-key` in the HTTP header) and the HMAC signature
+    (parameter `Authorization` in the HTTP header) sent in the request. 
+
+    The API key can be obtained from the OP Developer portal when a new
+    application is created. The HMAC signature is calculated over the API request 
+    contents using the authentication signature scheme described in the
+    [authentication example](https://op-developer.fi/p/hmac-authentication).
+
+    See the sections [Sandbox](#section/Sandbox) and [Production
+    access](#section/Production-access) for further details on how to access
+    specific environments.
+
+
+    ## Security Considerations
+
+    It is extremely important that the `merchantId`, the `accountId` and the
+    client private key are not exposed at any point. Together they represent the
+    identity of the client and thereby the corporation. In the possession of an
+    attacker they could be used to make fraudulent API calls potentially causing
+    considerable damage. Also, to secure the authenticity of the payment
+    transaction, the `paymentId` should not be exposed to the customer (payer) or
+    to any another party.
+
+
+    ## Sandbox
+
+    The OP Online Payment service can be tested in a sandbox environment by
+    [creating a new application](https://op-developer.fi/developers/apps/create)
+    in OP Developer and obtaining an API key. A secret is also generated, but it is not required
+    for using the sandbox. Use the private key given in the [authentication example](https://op-developer.fi/p/hmac-authentication) when
+    calculating the HMAC authentication signature for the sandbox API requests.
+
+    The `merchantId` and the `accountId` can be anything in the sandbox but they
+    should follow the UUID format. 
+
+    There is currently no test UI available in the sandbox environment. The
+    [Browser flow API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API)
+    sends the customer's browser directly to one of the return addresses
+    (`return`, `reject` or `cancel`) specified in the [Create payment](#operation/newPayment) request.
+
+    Payment cancellation can be simulated by using the `accountId` value
+    "71fead42-b248-4fff-8b86-29296eacaf98" and similarly
+    "eb3b688b-15da-48bd-b2fb-4f3eda501089" produces a failed payment (reject).
+
+    Other `accountId` values produce a successful payment (return).
+
+    The `x-api-key` header value for the [Merchant callback
+    API](https://op-developer.fi/docs/api/6wcXukrFrP1FglcJsNNzYe/Merchant%20callback%20API)
+    notifications in the sandbox environment is "dxB2AFwnwraQRrAsLZpJ5T4IrNGp7fhx". 
+
+    Using the sandbox is free of charge although some restrictions on the number
+    of calls apply.
+
+    ## Production access
+
+    Production access requires a contract with your local OP co-operative bank. Contact
+    your OP co-operative bank directly. 
+
+    Pricing information for production use is available from OP co-operative
+    banks.
+
+    Once you have signed the contract, [apply for production
+    access](https://op-developer.fi/developers/apps/create) to get an API key.
+
+    The API key will be available through OP Developer after we have accepted
+    your application. The API keys are different for the sandbox and production.
+
+    We will also request a public key for the signatures by e-mail from your
+    technical contact. Carefully read the instructions in the e-mail on how to 
+    onboard the public key to the production environment. After the public key
+    has been received, the `merchantId`, `accountId` and production API URLs 
+    will be sent to the technical contact in a secure email.
+
+    For more information about the keys and how to generate them, see the page
+    on [Authentication Signatures](https://op-developer.fi/p/hmac-authentication).
+
+    ## Change log
+    ### v1.3.1 (04/2024)
+    #### Changed
+    - Deprecated request parameter `messageToCustomer` in endpoint [Create payment](#operation/newPayment)
+    
+    ### v1.3 (03/2024)
+    #### Added
+    - Code examples in C#, Java, Node.js, PHP and Python added for all endpoints. 
+
+    #### Changed
+    - Updated API doc format from Swagger 2.0 to OpenAPI 3.0.1
+    - Error code 403 added to the response of [Create payment](#operation/newPayment)
+    - Request body parameter `url` usage limitation (no localhost URLs) added to schema documentation
+    
+    ### v1.2.2 (10/2021)
+    #### Changed
+    - Multiple small fixes
+    
+    ### v1.2.1 (10/2021)
+    - Initial version
+    
+  contact:
+    name: Support
+    email: onlinepayment@op.fi
+  version: 1.3.1
+servers:
+  - url: https://sandbox.apis.op.fi/paymentbutton
+  
+paths:
+  /v1/payments:
+    post:
+      summary: Create payment
+      description: >
+        Initiates an online payment process to collect a payment from customer.
+
+        The return, cancel and reject urls are used as browser redirect
+        addresses in the customer’s browser flow. Depending on the outcome of
+        the payment flow, the customer’s browser is directed to one of these addresses from the OP
+        Online payment service.
+      operationId: newPayment
+      tags:
+        - Payments
+      parameters:
+        - $ref: '#/components/parameters/x-session-id'
+        - $ref: '#/components/parameters/x-request-id'
+        - $ref: '#/components/parameters/date'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButtonPaymentCreationModel'
+        description: Payment info
+        required: true
+      responses:
+        '200':
+          description: OK. Payment created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentCreationResponseModel'
+              examples:
+                response:
+                  value:
+                    paymentId: 8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79
+                    paymentOperationId: >-
+                      a2697d49-30ec-4d50-b08b-459b73e7872d2e133836-8bfa-440c-a0b0-9f38613897b4
+                    paymentOperationValidation: >-
+                      MEUCIBNNSSslt+JUCCi/N7vwyoBzgbjekyvafeQvsItlAg0mAiEAjZC5RBFRf+hs6dOMfes/mz7jN6Fo69PxpnblXCnuEmw=
+        '400':
+          description: >-
+            Bad request. Invalid request parameters or business rules prevent
+            the request from being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentErrorResponseModel'
+              examples:
+                response:
+                  value:
+                    Id: 2e80f2f9-b31f-48e5-958c-b250281c1b00
+                    level: WARN
+                    type: VALIDATION
+                    message: 'Failed to validate amount: -2.00'
+        '401':
+          description: Unauthorized. Request could not be authenticated.
+        '403':
+          description: Forbidden. Request could not be authorized.
+        '500':
+          description: >-
+            Internal server error. Request could not be processed due to a
+            temporary technical issue.
+      security:
+        - xApiKey: []
+          Authorization: []
+      x-codeSamples:
+        - lang: cURL
+          label: CLI
+          source: >
+            curl --request POST \
+            --url 'https://sandbox.apis.op.fi/paymentbutton/v1/payments' \
+            --header 'Content-Type: application/json' \
+            --header 'Date: Tue, 02 Nov 2021 14:21:35 GMT' \
+            --header 'x-request-id: 705dd962-bba6-453d-9024-554c16d11773' \
+            --header 'x-session-id: 70eb1427-cfa1-40b6-a188-7e793163a196' \
+            --header 'x-api-key: 3AL1...' \
+            --header 'Authorization:
+            c3efaaee-a6bb-449f-9213-e45e23a462ef:1:1:767cc232ea0df...' \
+
+            --data '{
+              "accountId": "8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79",
+              "amount": "1.00",
+              "currency": "EUR",
+              "reference": "RF1413750465311063845747",
+              "return": {
+                "url": "https://shop.domain/return/path"
+              },
+              "cancel": {
+                "url": "https://shop.domain/cancel/path"
+              },
+              "reject": {
+                "url": "https://shop.domain/reject/path"
+              }
+            }'
+        - lang: "C#"
+          source: |
+            /*
+                OP Online Payment - REST API - Payments - Create payment example script
+            */
+            
+            namespace BrowserFlowInitiateOPPayment
+            {
+                using System;
+                using System.Net.Http;
+                using System.IO;
+                using System.Text;
+                using System.Security.Cryptography;
+                using Newtonsoft.Json;
+                using Newtonsoft.Json.Linq;
+            
+                public class Program
+                {
+                    private const string SERVER = "https://sandbox.apis.op.fi/paymentbutton";
+                    private const string URL = SERVER + "/v1/payments";
+            
+                    private const string API_KEY = "TODO: your API key"; // API key created in OP Developer
+                    private const string MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                    private const string PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+                    static async Task Main(string[] args)
+                    {
+                        /*
+                          1. Create payment
+                        */
+                        string payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+                        string formattedDate = DateTime.UtcNow.ToString("r");
+                        string sessionId = Guid.NewGuid().ToString();
+                        string requestId = Guid.NewGuid().ToString();
+            
+                        string stringToSign = $"POST\napplication/json; charset=utf-8\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{URL}\n{payload}";
+                        string signature = CreateSignature(stringToSign, PRIVATE_KEY_FILE);
+            
+                        string authorizationHeader = $"{MERCHANT_ID}:1:0:{signature}";
+            
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Accept.Clear();
+                        httpClient.DefaultRequestHeaders.Clear();
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorizationHeader);
+                        httpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                        httpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                        httpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                        httpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                        // Send the create payment request
+                        var paymentRequest = new StringContent(payload, Encoding.UTF8, "application/json");
+            
+                        try
+                         {
+                          Console.WriteLine("1. Initiating an Online Payment payment process...\n");
+                          var response = await httpClient.PostAsync(URL, paymentRequest);
+            
+                          if (response.IsSuccessStatusCode)
+                          {
+                              var result = await response.Content.ReadAsStringAsync();
+                              var formattedJson = JToken.Parse(result).ToString(Formatting.Indented);
+                              Console.WriteLine($"Response: {formattedJson}\n");
+                          }
+                          else
+                          {
+                              Console.WriteLine($"Error: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                              var errorContent = await response.Content.ReadAsStringAsync();
+                              Console.WriteLine($"Error details: {errorContent}");
+                          }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Exception occurred: {ex.Message}");
+                        }
+                    }
+            
+                    // Function for creating signature
+                    private static string CreateSignature(string stringToSign, string privateKeyPemFile)
+                    {
+                        var privateKeyPem = File.ReadAllText(privateKeyPemFile);
+            
+                        // Convert the PEM-formatted private key into an RSA object
+                        using var rsa = RSA.Create();
+                        rsa.ImportFromPem(privateKeyPem);
+            
+                        var messageBytes = Encoding.UTF8.GetBytes(stringToSign);
+                        var signatureBytes = rsa.SignData(messageBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                        return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower(); // Converts to hex
+                    }
+                }
+            }
+        - lang: "Java"
+          source: |
+            /**
+              OP Online Payment - REST API - Payments - Create Payment example
+              You need openssl installed to generate certificates and keys.
+            
+            */
+            package example;
+            
+            import java.net.URI;
+            import java.net.http.HttpClient;
+            import java.net.http.HttpRequest;
+            import java.net.http.HttpRequest.BodyPublishers;
+            import java.net.http.HttpResponse;
+            import java.nio.charset.StandardCharsets;
+            import java.security.KeyFactory;
+            import java.security.PrivateKey;
+            import java.security.Signature;
+            import java.security.spec.PKCS8EncodedKeySpec;
+            import java.time.ZonedDateTime;
+            import java.time.format.DateTimeFormatter;
+            import java.util.Base64;
+            import java.util.UUID;
+            
+            import org.json.JSONObject;
+            
+            public class RESTAPICreatePayment {
+            
+                private static final String SERVER= "https://sandbox.apis.op.fi";
+                private static final String URL = SERVER + "/paymentbutton/v1/payments";
+            
+                private static final String API_KEY = "TODO: your API key"; // API key created in OP Developer
+                private static final String MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                private static final String PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+                public static void main(String[] args) throws Exception {
+                  try {
+                      PrivateKey privateKey = getPrivateKey(PRIVATE_KEY_FILE);
+            
+                      ZonedDateTime date = ZonedDateTime.now();
+                      String sessionId = UUID.randomUUID().toString();
+                      String requestId = UUID.randomUUID().toString();
+                      String formattedDate = date.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            
+                      String payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+            
+                      String stringToSign = "POST\n" +
+                              "application/json\n" +
+                              formattedDate + "\n" +
+                              MERCHANT_ID + "\n" +
+                              API_KEY + "\n" +
+                              sessionId + "\n" +
+                              requestId + "\n" +
+                              URL + "\n" +
+                              payload;
+            
+                      String signature = createSignature(stringToSign, privateKey);
+                      String authorizationHeader = MERCHANT_ID + ":1:0:" + signature;
+            
+                      HttpClient client = HttpClient.newHttpClient();
+                      HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(URL))
+                              .header("Authorization", authorizationHeader)
+                              .header("Date", formattedDate)
+                              .header("Accept", "application/json")
+                              .header("Content-Type", "application/json")
+                              .header("x-session-id", sessionId)
+                              .header("x-request-id", requestId)
+                              .header("x-api-key", API_KEY)
+                              .POST(BodyPublishers.ofString(payload))
+                              .build();
+            
+                      System.out.println("1. Calling REST API Create payment with request: " + request);
+                      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                      System.out.println("Response:\n" + new JSONObject(response.body()).toString(4));
+            
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
+                }
+            
+                static PrivateKey getPrivateKey(String fileName) throws Exception {
+                  // Assuming the private key is in PKCS#8 PEM format
+                  String keyPEM = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(fileName)), StandardCharsets.UTF_8)
+                          .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+                          .replaceAll("-----END PRIVATE KEY-----", "")
+                          .replaceAll("\\s", "");
+            
+                  byte[] decoded = Base64.getDecoder().decode(keyPEM);
+                  PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+                  KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                  return keyFactory.generatePrivate(spec);
+                }
+            
+                static String createSignature(String stringToSign, PrivateKey privateKey) throws Exception {
+                  // Initialize a Signature object with the SHA256withRSA algorithm
+                  Signature signature = Signature.getInstance("SHA256withRSA");
+                  signature.initSign(privateKey);
+                  signature.update(stringToSign.getBytes(StandardCharsets.UTF_8));
+            
+                  // Sign the data and get the resulting signature bytes
+                  byte[] signatureBytes = signature.sign();
+            
+                  // Convert the signature bytes to a hex string
+                  StringBuilder hexString = new StringBuilder();
+                  for (byte b : signatureBytes) {
+                      String hex = Integer.toHexString(0xff & b);
+                      if (hex.length() == 1) hexString.append('0');
+                      hexString.append(hex);
+                  }
+                  return hexString.toString();
+                }
+            }
+        - lang: "JavaScript"
+          label: "Node.js"
+          source: |
+            /*
+              OP Online Payment - REST API - Payments - Create payment example script
+            
+              To run this you need openssl and jq installed in addition to a Node.js runtime (or a Node.js virtual machine such as nvm).
+              The example can be run on Node.js runtime versions 17.0 and above.
+            
+            */
+            
+            const crypto = require('crypto');
+            const https = require('https');
+            const axios = require('axios');
+            const fs = require('fs');
+            
+            const SERVER = "https://sandbox.apis.op.fi/paymentbutton";
+            const url = SERVER + "/v1/payments";
+            
+            const apiKey = "TODO: your API key";                               // API key created in OP Developer
+            const merchantId = "TODO: your merchant ID";                       // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            const privateKey = fs.readFileSync('TODO: your private key file'); // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            // Main application logic
+            (async () => {
+              // Initiate payment
+              console.log("Initiating an Online Payment payment process...\n");
+              const date = new Date();
+              const sessionId = crypto.randomUUID();
+              const requestId = crypto.randomUUID();
+            
+              const payload = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}';
+            
+              const stringToSign = "POST\n" +
+              "application/json\n" +
+              date.toUTCString() + "\n" +
+              merchantId + "\n" +
+              apiKey + "\n" +
+              sessionId + "\n" +
+              requestId + "\n" +
+              url + "\n" +
+              payload;
+            
+              // Create signature
+              const signature = createSignature(stringToSign);
+            
+              const authorizationHeader = merchantId + ":1:0:" + signature;
+              headers = {
+                  "Authorization": authorizationHeader,
+                  "Date": date.toUTCString(),
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "x-session-id": sessionId,
+                  "x-request-id": requestId,
+                  "x-api-key": apiKey
+              };
+            
+              try {
+                // Call OP Online Payment endpoint Create Payment
+                const response = await axios.post(`${url}`, payload, {
+                  headers: headers
+                });
+                console.log("Response: ", response.data);
+              } catch (error) {
+                console.error("Error initiating payment", error);
+              }
+            })();
+            
+            function createSignature(stringToSign) {
+              const sign = crypto.createSign('SHA256');
+              sign.update(stringToSign);
+            
+              // Sign data with private key, convert to hex and remove padding characters
+              const signature = sign.sign({key: privateKey})
+                .toString('hex')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/\s/g, '');
+            
+              return signature;
+            }
+        - lang: "PHP"
+          source: |
+            <?php
+            /******************************************************************************
+            
+              OP Online Payment - REST API - Create payment PHP code example
+            
+              This is an example PHP script for using Create payment endpoint.
+            
+              Note, This code assumes that you have the guzzlehttp/guzzle and Ramsey/uuid
+              packages installed for making HTTP requests and using uuid:s!
+              You can install them with Composer:
+            
+                composer require guzzlehttp/guzzle
+                composer require ramsey/uuid
+            
+                (Make sure you have installed php curl extension)
+            
+              You also need to have registered a developer application and to have generated
+              a valid API key & API secret in OP Developer.
+            
+            *******************************************************************************/
+            
+            require 'vendor/autoload.php';
+            
+            use GuzzleHttp\Client;
+            use GuzzleHttp\Exception\GuzzleException;
+            use GuzzleHttp\RequestOptions;
+            use Ramsey\Uuid\Uuid;
+            
+            // Credentials
+            $apiKey = "TODO: your API key";                   // API key created in OP Developer
+            $privateKeyFile = "TODO: your private key file";  // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            $merchantId = "TODO: your merchant ID";           // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            // Host details
+            $server = "https://sandbox.apis.op.fi";
+            $path = "/paymentbutton/v1/payments";
+            $url = $server . $path;
+            
+            // Initialize client
+            $client = new Client([
+                'base_uri' => $server
+            ]);
+            
+            ### 1. Initiate Online Payment process
+            echo "1. Initiating an Online Payment payment process...\n";
+            
+            // ###########
+            // New payment
+            // ###########
+            $date = new DateTime('UTC');
+            $formattedDate = $date->format('D, d M Y H:i:s \G\M\T');
+            
+            $requestId = Uuid::uuid4()->toString();
+            $sessionId = Uuid::uuid4()->toString();
+            
+            $paymentDetails = [
+                'amount' => '1.00',
+                'cancel' => ['url' => 'https://shop.example.com/cancel/path'],
+                'reject' => ['url' => 'https://shop.example.com/reject/path'],
+                'return' => ['url' => 'https://shop.example.com/return/path'],
+                'currency' => 'EUR',
+                'accountId' => '8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79',
+                'reference' => 'RF3517834735'
+            ];
+            $payload = json_encode($paymentDetails);
+            
+            // Load the private key
+            $privateKey = openssl_pkey_get_private("file://$privateKeyFile");
+            
+            $stringToSign = "POST" . "\n"
+            . "application/json" . "\n"
+            . $formattedDate . "\n"
+            . $merchantId . "\n"
+            . $apiKey . "\n"
+            . $sessionId . "\n"
+            . $requestId. "\n"
+            . $url . "\n"
+            . $payload;
+            
+            openssl_sign($stringToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            // Constructing the Authorization header
+            $algorithm = 1; // For SHA-256
+            $keyVersion = 0; // Example version, adjust as necessary
+            $authorizationHeader = $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($signature);
+            
+            $header = [
+                'Authorization' => $authorizationHeader,
+                'Date' => $formattedDate,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'x-session-id' => $sessionId,
+                'x-request-id' => $requestId,
+                'x-api-key' => $apiKey,
+            ];
+            
+            // Make the request
+            try {
+                $response = $client->post($path, [
+                    'headers' => $header,
+                    'body' => $payload
+                ]);
+                echo "Response: " . $response->getStatusCode() . " " . $response->getReasonPhrase() . "\n";
+                $responseArray = json_decode($response->getBody(), true);
+                echo json_encode($responseArray, JSON_PRETTY_PRINT);
+            } catch (GuzzleException $e) {
+                echo "Request failed: " . $e->getMessage() . "\n";
+            }
+            ?>
+        - lang: "Python"
+          source: |
+            """
+            OP Online Payment - REST API - Payments - Create payment example script
+            
+            Note, This code assumes that you have the python and requests library installed
+            for making HTTP requests. You also need to have registered a developer application
+            and to have generated a valid API key & API secret in OP Developer.
+            
+            """
+            from datetime import datetime, timezone
+            from cryptography.hazmat.primitives import serialization, hashes
+            from cryptography.hazmat.primitives.asymmetric import padding
+            import json
+            import os
+            import requests
+            import uuid
+            
+            # Credentials
+            API_KEY = "TODO: your API key"                   # API key created in OP Developer
+            MERCHANT_ID = "TODO: your merchant ID"           # Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            PRIVATE_KEY_FILE = "TODO: your private key file" # The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            # Host details
+            SERVER = "https://sandbox.apis.op.fi/paymentbutton"
+            
+            ### 1. Initiate Online Payment process
+            URL = f"{SERVER}/v1/payments"
+            
+            # Signature details
+            DATE = datetime.now(timezone.utc).strftime("%a, %d %b %Y %T GMT")
+            SESSION_ID = str(uuid.uuid4()).lower()
+            REQUEST_ID = str(uuid.uuid4()).lower()
+            REQUEST_BODY = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}'
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            SIGNATURE_BASE = f"""POST
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            {REQUEST_BODY}"""
+            
+            with open(PRIVATE_KEY_FILE, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("1. Initiating an Online Payment payment process...")
+            response = requests.post(URL, headers=headers, data=REQUEST_BODY)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}\n")
+            
+            payment_response = response.json()
+  /v1/payments/{paymentId}:
+    get:
+      summary: Payment status
+      description: Returns the status of an online payment.
+      tags:
+        - Payments
+      operationId: getStatus
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          description: ID of the payment returned from the Create payment (POST) call.
+          schema:
+            type: string
+            maxLength: 36
+        - $ref: '#/components/parameters/x-session-id'
+        - $ref: '#/components/parameters/x-request-id'
+        - $ref: '#/components/parameters/date'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+        '400':
+          description: >-
+            Bad request. Invalid request parameters or business rules prevent
+            the request from being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentErrorResponseModel'
+              examples:
+                response:
+                  value:
+                    Id: 2e80f2f9-b31f-48e5-958c-b250281c1b00
+                    level: WARN
+                    type: VALIDATION
+                    message: Invalid paymentId
+        '401':
+          description: Unauthorized. Request could not be authenticated / authorized.
+        '404':
+          description: Not found. Payment not found.
+        '500':
+          description: >-
+            Internal server error. Request could not be processed due to a
+            temporary technical issue.
+      security:
+        - xApiKey: []
+          Authorization: []
+      x-codeSamples:
+        - lang: cURL
+          label: CLI
+          source: >
+            curl --request GET \
+            --url
+            'https://sandbox.apis.op.fi/paymentbutton/v1/payments/8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79'
+            \
+            --header 'Date: Tue, 02 Nov 2021 14:21:38 GMT' \
+            --header 'x-request-id: 1b2de711-5813-43f4-bd49-ea853554c388' \
+            --header 'x-session-id: a07dd344-71a3-4249-a64e-c4eb99b3a80b' \
+            --header 'x-api-key: 3AL1...' \
+            --header 'Authorization: c3efaaee-a6bb-449f-9213-e45e23a462ef:1:1:39a05bba09481...'
+        - lang: "C#"
+          source: |
+            /*
+                OP Online Payment - REST API - Payment status example
+            */
+            
+            namespace RESTAPIPaymentStatus
+            {
+                using System;
+                using System.Net.Http;
+                using System.Security.Cryptography.X509Certificates;
+                using System.IO;
+                using System.Text;
+                using System.Text.Json.Nodes;
+                using System.Security.Cryptography;
+                using Newtonsoft.Json;
+                using Newtonsoft.Json.Linq;
+                using System.Net.Http.Headers;
+                using System.Text.Json;
+                using System.Dynamic;
+            
+                public class Program
+                {
+                    private const string SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+                    private const string SERVER = "https://sandbox.apis.op.fi";
+                    private const string URL = SERVER + "/paymentbutton/v1/payments";
+            
+                    private const string API_KEY = "TODO: your API key"; // API key created in OP Developer
+                    private const string MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                    private const string PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+                    static async Task Main(string[] args)
+                    {
+                        /*
+                          1. Create payment
+                        */
+                        string payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+                        string formattedDate = DateTime.UtcNow.ToString("r");
+                        string sessionId = Guid.NewGuid().ToString();
+                        string requestId = Guid.NewGuid().ToString();
+            
+                        string stringToSign = $"POST\napplication/json; charset=utf-8\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{URL}\n{payload}";
+                        string signature = CreateSignature(stringToSign, PRIVATE_KEY_FILE);
+            
+                        string authorizationHeader = $"{MERCHANT_ID}:1:0:{signature}";
+            
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Accept.Clear();
+                        httpClient.DefaultRequestHeaders.Clear();
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorizationHeader);
+                        httpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                        httpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                        httpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                        httpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                        // Send the create payment request
+                        var paymentRequest = new StringContent(payload, Encoding.UTF8, "application/json");
+            
+                        try
+                         {
+                          Console.WriteLine("1. Initiating an Online Payment payment process...\n");
+                          var response = await httpClient.PostAsync(URL, paymentRequest);
+            
+                          if (response.IsSuccessStatusCode)
+                          {
+                              var result = await response.Content.ReadAsStringAsync();
+                              var formattedJson = JToken.Parse(result).ToString(Formatting.Indented);
+                              Console.WriteLine($"Response: {formattedJson}\n");
+            
+                              /*
+                                2. Initiate browser flow for OP payment
+                              */
+                              dynamic data = JObject.Parse(result);
+                              var paymentOperationId = data.paymentOperationId.ToString();
+                              var paymentOperationValidation = data.paymentOperationValidation.ToString();
+                              var paymentId = data.paymentId.ToString();
+            
+                              var browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + paymentOperationId + "&paymentOperationValidation=" + paymentOperationValidation;
+            
+                              HttpClientHandler httpClientHandler = new HttpClientHandler();
+                              httpClientHandler.AllowAutoRedirect = false;
+                              using var initiateHttpClient = new HttpClient(httpClientHandler);
+            
+                              initiateHttpClient.DefaultRequestHeaders.Accept.Clear();
+                              initiateHttpClient.DefaultRequestHeaders.Clear();
+                              initiateHttpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                              initiateHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                              initiateHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                              try
+                              {
+                                // Call Browser Flow API endpoint Initiate OP payment flow in browser
+                                Console.WriteLine("2. Initiating OP payment flow in browser to: " + browserUrl);
+                                var initiateResponse = await initiateHttpClient.GetAsync(browserUrl);
+                                var statusCode = (int)initiateResponse.StatusCode;
+            
+                                Console.WriteLine($"Response: {statusCode} {initiateResponse.ReasonPhrase} \n");
+            
+                                if (statusCode.ToString() == "302"){
+                                  /*
+                                    3. Get payment status
+                                  */
+                                  var statusUrl = URL + "/" + paymentId;
+                                  string statusStringToSign = $"GET\n\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{statusUrl}\n";
+            
+                                  string statusSignature = CreateSignature(statusStringToSign, PRIVATE_KEY_FILE);
+            
+                                  string statusAuthorizationHeader = $"{MERCHANT_ID}:1:0:{statusSignature}";
+            
+                                  using var statusHttpClient = new HttpClient();
+                                  statusHttpClient.DefaultRequestHeaders.Accept.Clear();
+                                  statusHttpClient.DefaultRequestHeaders.Clear();
+                                  statusHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", statusAuthorizationHeader);
+                                  statusHttpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                                  statusHttpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                                  statusHttpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                                  statusHttpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                                  try {
+                                    Console.WriteLine("3. Requesting payment status...");
+                                    var statusResponse = await statusHttpClient.GetAsync(statusUrl);
+            
+                                    if (statusResponse.IsSuccessStatusCode)
+                                    {
+                                        var statusResult = await statusResponse.Content.ReadAsStringAsync();
+                                        var formattedStatusJson = JToken.Parse(statusResult).ToString(Formatting.Indented);
+                                        Console.WriteLine($"Response: {formattedStatusJson}\n");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Error: {(int)statusResponse.StatusCode} - {statusResponse.ReasonPhrase}");
+                                        var statusErrorContent = await statusResponse.Content.ReadAsStringAsync();
+                                        Console.WriteLine($"Error details: {statusErrorContent}");
+                                    }
+                                  } catch (Exception ex) {
+                                    Console.WriteLine($"Exception occurred: {ex.Message}");
+                                  }
+                                }
+                              }
+                              catch (Exception ex)
+                              {
+                                  Console.WriteLine($"Exception occurred: {ex.Message}");
+                              }
+            
+                          }
+                          else
+                          {
+                              Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                              var errorContent = await response.Content.ReadAsStringAsync();
+                              Console.WriteLine($"Error details: {errorContent}");
+                          }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Exception occurred: {ex.Message}");
+                        }
+                    }
+            
+                    // Function for creating signature
+                    private static string CreateSignature(string stringToSign, string privateKeyPemFile)
+                    {
+                        var privateKeyPem = File.ReadAllText(privateKeyPemFile);
+            
+                        // Convert the PEM-formatted private key into an RSA object
+                        using var rsa = RSA.Create();
+                        rsa.ImportFromPem(privateKeyPem);
+            
+                        var messageBytes = Encoding.UTF8.GetBytes(stringToSign);
+                        var signatureBytes = rsa.SignData(messageBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                        return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower(); // Converts to hex
+                    }
+                }
+            }
+        - lang: "Java"
+          source: |
+            /**
+              OP Online Payment - REST API - Payments - Payment status example
+              You need openssl installed to generate certificates and keys.
+            */
+            package example;
+            
+            import java.net.URI;
+            import java.net.http.HttpClient;
+            import java.net.http.HttpRequest;
+            import java.net.http.HttpRequest.BodyPublishers;
+            import java.net.http.HttpResponse;
+            import java.nio.charset.StandardCharsets;
+            import java.security.KeyFactory;
+            import java.security.PrivateKey;
+            import java.security.Signature;
+            import java.security.spec.PKCS8EncodedKeySpec;
+            import java.time.ZonedDateTime;
+            import java.time.format.DateTimeFormatter;
+            import java.util.Base64;
+            import java.util.UUID;
+            
+            import org.json.JSONObject;
+            
+            public class RESTAPIPaymentStatus {
+            
+                private static final String SERVER = "https://sandbox.apis.op.fi";
+                private static final String SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+                private static final String URL = SERVER + "/paymentbutton/v1/payments";
+            
+                private static final String API_KEY = "TODO: your API key"; // API key created in OP Developer
+                private static final String MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                private static final String PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page 
+            
+                public static void main(String[] args) throws Exception {
+                  try {
+                      // 1. Call REST API endpoint Create payment
+                      PrivateKey privateKey = getPrivateKey(PRIVATE_KEY_FILE);
+            
+                      ZonedDateTime date = ZonedDateTime.now();
+                      String sessionId = UUID.randomUUID().toString();
+                      String requestId = UUID.randomUUID().toString();
+                      String formattedDate = date.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            
+                      String payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+            
+                      String stringToSign = "POST\n" +
+                              "application/json\n" +
+                              formattedDate + "\n" +
+                              MERCHANT_ID + "\n" +
+                              API_KEY + "\n" +
+                              sessionId + "\n" +
+                              requestId + "\n" +
+                              URL + "\n" +
+                              payload;
+            
+                      String signature = createSignature(stringToSign, privateKey);
+                      String authorizationHeader = MERCHANT_ID + ":1:0:" + signature;
+            
+                      HttpClient client = HttpClient.newHttpClient();
+                      HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(URL))
+                              .header("Authorization", authorizationHeader)
+                              .header("Date", formattedDate)
+                              .header("Accept", "application/json")
+                              .header("Content-Type", "application/json")
+                              .header("x-session-id", sessionId)
+                              .header("x-request-id", requestId)
+                              .header("x-api-key", API_KEY)
+                              .POST(BodyPublishers.ofString(payload))
+                              .build();
+            
+                      System.out.println("1. Calling REST API Create payment with request: " + request);
+                      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                      System.out.println("Response:\n" + new JSONObject(response.body()).toString(4));
+            
+                      try {
+                         // 2. Call Browser Flow API endpoint Initiate OP payment flow in browser
+                        String browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + new JSONObject(response.body()).getString("paymentOperationId") + "&paymentOperationValidation=" + new JSONObject(response.body()).getString("paymentOperationValidation");
+            
+                        HttpRequest initiateRequest = HttpRequest.newBuilder()
+                                .uri(URI.create(String.format(browserUrl)))
+                                .header("Date", formattedDate)
+                                .header("Accept", "application/json")
+                                .header("Content-Type", "application/json")
+                                .header("x-session-id", sessionId)
+                                .header("x-request-id", requestId)
+                                .header("x-api-key", API_KEY)
+                                .GET()
+                                .build();
+            
+                        System.out.println("2. Initiating OP payment flow in browser to " + browserUrl);
+                        HttpResponse<String> initiateResponse = client.send(initiateRequest, HttpResponse.BodyHandlers.ofString());
+                        System.out.println("Response: " + initiateResponse + " " + initiateResponse.body());
+                        System.out.println("status: " + initiateResponse.statusCode());
+            
+                        if (initiateResponse.statusCode() == 302){
+                           // 3. Check payment status
+                           String statusUrl = URL + "/" + new JSONObject(response.body()).getString("paymentId");
+                           System.out.println("3. Requesting payment status for payment ID: " + new JSONObject(response.body()).getString("paymentId"));
+            
+                           String statusStringToSign = "GET\n" +
+                             "application/json\n" +
+                             formattedDate + "\n" +
+                             MERCHANT_ID + "\n" +
+                             API_KEY + "\n" +
+                             sessionId + "\n" +
+                             requestId + "\n" +
+                             statusUrl + "\n";
+            
+                           String statusSignature = createSignature(statusStringToSign, privateKey);
+                           String statusAuthorizationHeader = MERCHANT_ID + ":1:0:" + statusSignature;
+            
+                           HttpRequest statusRequest = HttpRequest.newBuilder()
+                                   .uri(URI.create(String.format(statusUrl)))
+                                   .header("Authorization", statusAuthorizationHeader)
+                                   .header("Date", formattedDate)
+                                   .header("Accept", "application/json")
+                                   .header("Content-Type", "application/json")
+                                   .header("x-session-id", sessionId)
+                                   .header("x-request-id", requestId)
+                                   .header("x-api-key", API_KEY)
+                                   .GET()
+                                   .build();
+            
+                           try {
+                             HttpResponse<String> statusResponse = client.send(statusRequest, HttpResponse.BodyHandlers.ofString());
+                             System.out.println("Response: " + statusResponse + " " + new JSONObject(statusResponse.body()).toString(4));
+            
+                           } catch (Exception e) {
+                               e.printStackTrace();
+                           }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
+                }
+            
+                static PrivateKey getPrivateKey(String fileName) throws Exception {
+                  // Assuming the private key is in PKCS#8 PEM format
+                  String keyPEM = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(fileName)), StandardCharsets.UTF_8)
+                          .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+                          .replaceAll("-----END PRIVATE KEY-----", "")
+                          .replaceAll("\\s", "");
+            
+                  byte[] decoded = Base64.getDecoder().decode(keyPEM);
+                  PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+                  KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                  return keyFactory.generatePrivate(spec);
+                }
+            
+                static String createSignature(String stringToSign, PrivateKey privateKey) throws Exception {
+                  // Initialize a Signature object with the SHA256withRSA algorithm
+                  Signature signature = Signature.getInstance("SHA256withRSA");
+                  signature.initSign(privateKey);
+                  signature.update(stringToSign.getBytes(StandardCharsets.UTF_8));
+            
+                  // Sign the data and get the resulting signature bytes
+                  byte[] signatureBytes = signature.sign();
+            
+                  // Convert the signature bytes to a hex string
+                  StringBuilder hexString = new StringBuilder();
+                  for (byte b : signatureBytes) {
+                      String hex = Integer.toHexString(0xff & b);
+                      if (hex.length() == 1) hexString.append('0');
+                      hexString.append(hex);
+                  }
+                  return hexString.toString();
+                }
+            }
+        - lang: "JavaScript"
+          label: "Node.js"
+          source: |
+            /*
+              OP Online Payment - REST API - Payments - Payment status example script
+            
+              To run this you need openssl and jq installed in addition to a Node.js runtime (or a Node.js virtual machine such as nvm).
+              The example can be run on Node.js runtime versions 17.0 and above.
+            */
+            
+            const crypto = require('crypto');
+            const https = require('https');
+            const axios = require('axios');
+            axios.defaults.maxRedirects = 0;
+            const fs = require('fs');
+            
+            const SERVER = "https://sandbox.apis.op.fi/paymentbutton";
+            const SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+            const url = SERVER + "/v1/payments";
+            
+            const apiKey = "TODO: your API key";                               // API key created in OP Developer
+            const merchantId = "TODO: your merchant ID";                       // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            const privateKey = fs.readFileSync('TODO: your private key file'); // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            // Main application logic
+            (async () => {
+              // Initiate payment
+              console.log("1. Initiating an Online Payment payment process...\n");
+              const date = new Date();
+              const sessionId = crypto.randomUUID();
+              const requestId = crypto.randomUUID();
+            
+              const payload = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}';
+            
+              const stringToSign = "POST\n" +
+              "application/json\n" +
+              date.toUTCString() + "\n" +
+              merchantId + "\n" +
+              apiKey + "\n" +
+              sessionId + "\n" +
+              requestId + "\n" +
+              url + "\n" +
+              payload;
+            
+              // Create signature
+              const signature = createSignature(stringToSign);
+            
+              const authorizationHeader = merchantId + ":1:0:" + signature;
+              headers = {
+                  "Authorization": authorizationHeader,
+                  "Date": date.toUTCString(),
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "x-session-id": sessionId,
+                  "x-request-id": requestId,
+                  "x-api-key": apiKey
+              };
+            
+              try {
+                // Call OP Online Payment REST API endpoint Create Payment
+                const response = await axios.post(`${url}`, payload, {
+                  headers: headers
+                });
+                console.log("Response: ", response.data);
+                try {
+                  // Call Browser Flow API endpoint Initiate OP payment flow in browser
+                  const browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + response.data.paymentOperationId + "&paymentOperationValidation=" + response.data.paymentOperationValidation;
+            
+                  headers = {
+                      "Date": date.toUTCString(),
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                      "x-session-id": sessionId,
+                      "x-request-id": requestId,
+                      "x-api-key": apiKey
+                  };
+                  console.log("2. Launching payment browser flow request to " + browserUrl);
+                  const flowResponse = await axios.get(`${browserUrl}`, {
+                    headers: headers
+                  });
+                } catch (error) {
+                  console.log("Response: " + error.response.status + " " + error.response.statusText + "\n");
+                  if (error.response.status == '302'){
+                      // 3. Check payment status
+                      console.log("3. Requesting payment status for payment ID:", response.data.paymentId);
+                      const statusUrl = url + "/" + response.data.paymentId;
+                      const statusStringToSign = "GET\n" +
+                        "application/json\n" +
+                        date.toUTCString() + "\n" +
+                        merchantId + "\n" +
+                        apiKey + "\n" +
+                        sessionId + "\n" +
+                        requestId + "\n" +
+                        statusUrl + "\n";
+                      const statusSignature = createSignature(statusStringToSign);
+                      const statusAuthorizationHeader = merchantId + ":1:0:" + statusSignature;
+            
+                      headers = {
+                        "Authorization": statusAuthorizationHeader,
+                        "Date": date.toUTCString(),
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "x-session-id": sessionId,
+                        "x-request-id": requestId,
+                        "x-api-key": apiKey
+                      };
+            
+                      try {
+                        const statusResponse = await axios.get(`${statusUrl}`, {
+                          headers: headers
+                        });
+                        console.log("Response: ", statusResponse.data);
+                      } catch (error) {
+                        console.log("Response: " + error.response.status + " " + error.response.statusText);
+                      }
+                  }
+                }
+              } catch (error) {
+                console.error("Error initiating payment", error);
+              }
+            })();
+            
+            function createSignature(stringToSign) {
+              const sign = crypto.createSign('SHA256');
+              sign.update(stringToSign);
+            
+              // Sign data with private key, convert to hex and remove padding characters
+              const signature = sign.sign({key: privateKey})
+                .toString('hex')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/\s/g, '');
+            
+              return signature;
+            }
+        - lang: "PHP"
+          source: |
+            <?php
+            /******************************************************************************
+            
+              OP Online Payment - REST API - Payment status PHP code example
+            
+              This is an example PHP script for using Payment status endpoint.
+            
+              Note, This code assumes that you have the guzzlehttp/guzzle and Ramsey/uuid
+              packages installed for making HTTP requests and using uuid:s!
+              You can install them with Composer:
+            
+                composer require guzzlehttp/guzzle
+                composer require ramsey/uuid
+            
+                (Make sure you have installed php curl extension)
+            
+              You also need to have registered a developer application and to have generated
+              a valid API key & API secret in OP Developer.
+            
+            *******************************************************************************/
+            
+            require 'vendor/autoload.php';
+            
+            use GuzzleHttp\Client;
+            use GuzzleHttp\Exception\GuzzleException;
+            use GuzzleHttp\RequestOptions;
+            use Ramsey\Uuid\Uuid;
+            
+            // Credentials
+            $apiKey = "TODO: your API key";                   // API key created in OP Developer
+            $privateKeyFile = "TODO: your private key file";  // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            $merchantId = "TODO: your merchant ID";           // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            // Host details
+            $server = "https://sandbox.apis.op.fi";
+            $serverFront = "https://api.smn-sandbox.aws.op-palvelut.fi";
+            $path = "/paymentbutton/v1/payments";
+            $url = $server . $path;
+            
+            // Initialize client
+            $client = new Client([
+                'base_uri' => $server
+            ]);
+            
+            // #################
+            // 1. Create payment
+            // #################
+            echo "1. Initiating an Online Payment payment process...\n";
+            
+            $date = new DateTime('UTC');
+            $formattedDate = $date->format('D, d M Y H:i:s \G\M\T');
+            
+            $requestId = Uuid::uuid4()->toString();
+            $sessionId = Uuid::uuid4()->toString();
+            
+            $paymentDetails = [
+                'amount' => '1.00',
+                'cancel' => ['url' => 'https://shop.example.com/cancel/path'],
+                'reject' => ['url' => 'https://shop.example.com/reject/path'],
+                'return' => ['url' => 'https://shop.example.com/return/path'],
+                'currency' => 'EUR',
+                'accountId' => '8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79',
+                'reference' => 'RF3517834735'
+            ];
+            $payload = json_encode($paymentDetails);
+            
+            // Load the private key
+            $privateKey = openssl_pkey_get_private("file://$privateKeyFile");
+            
+            $stringToSign = "POST" . "\n"
+            . "application/json" . "\n"
+            . $formattedDate . "\n"
+            . $merchantId . "\n"
+            . $apiKey . "\n"
+            . $sessionId . "\n"
+            . $requestId. "\n"
+            . $url . "\n"
+            . $payload;
+            
+            openssl_sign($stringToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            // Constructing the Authorization header
+            $algorithm = 1; // For SHA-256
+            $keyVersion = 0; // Example version, adjust as necessary
+            $authorizationHeader = $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($signature);
+            
+            $header = [
+                'Authorization' => $authorizationHeader,
+                'Date' => $formattedDate,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'x-session-id' => $sessionId,
+                'x-request-id' => $requestId,
+                'x-api-key' => $apiKey,
+            ];
+            
+            // Make the request
+            try {
+                $response = $client->post($path, [
+                    'headers' => $header,
+                    'body' => $payload
+                ]);
+                echo "Response: " . $response->getStatusCode() . " " . $response->getReasonPhrase() . "\n";
+                $responseArray = json_decode($response->getBody(), true);
+                $responseJson = json_encode($responseArray, JSON_PRETTY_PRINT);
+                echo $responseJson . "\n\n";
+            
+                // ######################################
+                // 2. Initiate OP payment flow in browser
+                // ######################################
+                $browserPath = "/customer/payment/startPaymentConfirmation?paymentOperationId=" . $responseArray['paymentOperationId'] . "&paymentOperationValidation=" . $responseArray['paymentOperationValidation'];
+                $header = [
+                    'Date' => $formattedDate,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'x-session-id' => $sessionId,
+                    'x-request-id' => $requestId,
+                    'x-api-key' => $apiKey
+                ];
+                echo "2. Initiating OP payment flow request to " . $serverFront . $browserPath ."\n";
+            
+                $browserClient = new Client([
+                    'base_uri' => $serverFront,
+                    'allow_redirects' => false
+                ]);
+            
+                $initiateResponse = $browserClient->get($browserPath, [
+                    'headers' => $header
+                ]);
+                echo "Response: " . $initiateResponse->getStatusCode() . " " . $initiateResponse->getReasonPhrase() . "\n\n";
+            
+                // #######################
+                // 3. Check payment status
+                // #######################
+                if ($initiateResponse->getStatusCode() == '302'){
+                  echo "3. Checking payment status...\n";
+                  $statusPath = $path . "/" . $responseArray['paymentId'];
+                  $statusUrl = $server . $statusPath;
+            
+                  $statusStringToSign = "GET" . "\n"
+                  . "application/json" . "\n"
+                  . $formattedDate . "\n"
+                  . $merchantId . "\n"
+                  . $apiKey . "\n"
+                  . $sessionId . "\n"
+                  . $requestId. "\n"
+                  . $statusUrl . "\n";
+            
+                  openssl_sign($statusStringToSign, $statusSignature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+                  $statusAuthorizationHeader =  $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($statusSignature);
+            
+                  $header = [
+                      'Authorization' => $statusAuthorizationHeader,
+                      'Date' => $formattedDate,
+                      'Accept' => 'application/json',
+                      'Content-Type' => 'application/json',
+                      'x-session-id' => $sessionId,
+                      'x-request-id' => $requestId,
+                      'x-api-key' => $apiKey
+                  ];
+            
+                  $statusResponse = $client->get($statusPath, [
+                      'headers' => $header
+                  ]);
+                  echo "Response: " . $statusResponse->getStatusCode() . " " . $statusResponse->getReasonPhrase() . "\n";
+                  $statusResponseArray = json_decode($statusResponse->getBody(), true); // Decoding as array for easier manipulation if needed
+                  $statusResponseJson = json_encode($statusResponseArray, JSON_PRETTY_PRINT);
+                  echo $statusResponseJson . "\n\n";
+                }
+            } catch (GuzzleException $e) {
+                echo "Request failed: " . $e->getMessage() . "\n";
+            }
+            ?>
+        - lang: "Python"
+          source: |
+            """
+            OP Online Payment - REST API - Payments - Payment status example script
+            
+            Note, This code assumes that you have the python and requests library installed
+            for making HTTP requests. You also need to have registered a developer application
+            and to have generated a valid API key & API secret in OP Developer.
+            
+            """
+            from datetime import datetime, timezone
+            from cryptography.hazmat.primitives import serialization, hashes
+            from cryptography.hazmat.primitives.asymmetric import padding
+            import json
+            import requests
+            import urllib.parse
+            import uuid
+            
+            # Credentials
+            API_KEY = "TODO: your API key"                   # API key created in OP Developer
+            MERCHANT_ID = "TODO: your merchant ID"           # Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            PRIVATE_KEY_FILE = "TODO: your private key file" # The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            # Host details
+            SERVER = "https://sandbox.apis.op.fi/paymentbutton"
+            SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi"
+            
+            ### 1. Initiate Online Payment process
+            URL = f"{SERVER}/v1/payments"
+            
+            # Signature details
+            DATE = datetime.now(timezone.utc).strftime("%a, %d %b %Y %T GMT")
+            SESSION_ID = str(uuid.uuid4()).lower()
+            REQUEST_ID = str(uuid.uuid4()).lower()
+            REQUEST_BODY = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}'
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            SIGNATURE_BASE = f"""POST
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            {REQUEST_BODY}"""
+            
+            with open(PRIVATE_KEY_FILE, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("1. Initiating an Online Payment payment process...")
+            response = requests.post(URL, headers=headers, data=REQUEST_BODY)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}\n")
+            
+            payment_response = response.json()
+            
+            ### 2. Initiate OP payment flow in browser
+            URL = f"{SERVER_FRONT}/customer/payment/startPaymentConfirmation?paymentOperationId={payment_response['paymentOperationId']}&paymentOperationValidation={urllib.parse.quote(payment_response['paymentOperationValidation'])}"
+            
+            headers = {
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print(f"2. Launching payment browser flow request to {URL}")
+            response = requests.get(URL, headers=headers, allow_redirects=False)
+            print(f"Response: {response.status_code} {response.reason}\n{response.text}")
+            
+            ### 3. Check payment status
+            URL = f"{SERVER}/v1/payments/{payment_response['paymentId']}"
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            
+            SIGNATURE_BASE = f"""GET
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            """
+            
+            with open(PRIVATE_KEY_FILE, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("3. Requesting payment status...")
+            response = requests.get(URL, headers=headers)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}")
+  /v1/payments/{paymentId}/refunds:
+    post:
+      summary: Refund
+      description: Initiates a refund to the original payer.     
+      operationId: refund      
+      tags:
+        - Payments
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          description: ID of the payment returned from the Create payment (POST) call.
+          schema:
+            type: string
+            maxLength: 36
+        - $ref: '#/components/parameters/x-session-id'
+        - $ref: '#/components/parameters/x-request-id'
+        - $ref: '#/components/parameters/date'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButtonPaymentRefundModel'
+        description: Refund info
+        required: true
+      responses:
+        '200':
+          description: OK. Refunded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentRefundResponseModel'
+              examples:
+                response:
+                  value:
+                    paymentId: 8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79
+                    totalRefundedAmount: '1.00'
+        '400':
+          description: >-
+            Bad request. Invalid request parameters or business rules prevent
+            the request from being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentErrorResponseModel'
+              examples:
+                response:
+                  value:
+                    Id: 2e80f2f9-b31f-48e5-958c-b250281c1b00
+                    level: WARN
+                    type: VALIDATION
+                    message: Invalid paymentId
+        '401':
+          description: Unauthorized. Request could not be authenticated / authorized.
+        '500':
+          description: >-
+            Internal server error. Request could not be processed due to a
+            temporary technical issue.
+      security:
+        - xApiKey: []
+          Authorization: []
+      x-codeSamples:
+        - lang: cURL
+          label: CLI
+          source: >
+            curl --request POST \
+            --url
+            'https://sandbox.apis.op.fi/paymentbutton/v1/payments/8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79/refunds'
+            \
+            --header 'Content-Type: application/json' \
+            --header 'Date: Tue, 02 Nov 2021 14:25:02 GMT' \
+            --header 'x-request-id: 33e46111-3150-4bbd-8144-a7e12ced209b' \
+            --header 'x-session-id: 0749a8c3-dbbc-4cdc-9d55-361e0c9bea5d' \
+            --header 'x-api-key: 3AL1...' \
+            --header 'Authorization: c3efaaee-a6bb-449f-9213-e45e23a462ef:1:1:95abcc452235a...' \
+
+            --data '{
+              "amount": "1.00",
+              "currency": "EUR",
+              "reference": "RF511459162006"
+            }'
+        - lang: "C#"
+          source: |
+            /*
+                OP Online Payment - REST API - Refund example
+            */
+            
+            namespace RESTAPIRefund
+            {
+            using System;
+            using System.Net.Http;
+            using System.IO;
+            using System.Text;
+            using System.Security.Cryptography;
+            using Newtonsoft.Json;
+            using Newtonsoft.Json.Linq;
+            
+                public class Program
+                {
+                    private const string SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+                    private const string SERVER = "https://sandbox.apis.op.fi";
+                    private const string URL = SERVER + "/paymentbutton/v1/payments";
+            
+                    private const string API_KEY = "TODO: your API key"; // API key created in OP Developer
+                    private const string MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                    private const string PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+                    static async Task Main(string[] args)
+                    {
+                        /*
+                          1. Create payment
+                        */
+                        string payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+                        string formattedDate = DateTime.UtcNow.ToString("r");
+                        string sessionId = Guid.NewGuid().ToString();
+                        string requestId = Guid.NewGuid().ToString();
+            
+                        string stringToSign = $"POST\napplication/json; charset=utf-8\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{URL}\n{payload}";
+                        string signature = CreateSignature(stringToSign, PRIVATE_KEY_FILE);
+            
+                        string authorizationHeader = $"{MERCHANT_ID}:1:0:{signature}";
+            
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Accept.Clear();
+                        httpClient.DefaultRequestHeaders.Clear();
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorizationHeader);
+                        httpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                        httpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                        httpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                        httpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                        // Send the create payment request
+                        var paymentRequest = new StringContent(payload, Encoding.UTF8, "application/json");
+            
+                        try
+                         {
+                          Console.WriteLine("1. Initiating an Online Payment payment process...\n");
+                          var response = await httpClient.PostAsync(URL, paymentRequest);
+            
+                          if (response.IsSuccessStatusCode)
+                          {
+                              var result = await response.Content.ReadAsStringAsync();
+                              var formattedJson = JToken.Parse(result).ToString(Formatting.Indented);
+                              Console.WriteLine($"Response: {formattedJson}\n");
+            
+                              /*
+                                2. Initiate browser flow for OP payment
+                              */
+                              dynamic data = JObject.Parse(result);
+                              var paymentOperationId = data.paymentOperationId.ToString();
+                              var paymentOperationValidation = data.paymentOperationValidation.ToString();
+                              var paymentId = data.paymentId.ToString();
+            
+                              var browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + paymentOperationId + "&paymentOperationValidation=" + paymentOperationValidation;
+            
+                              HttpClientHandler httpClientHandler = new HttpClientHandler();
+                              httpClientHandler.AllowAutoRedirect = false;
+                              using var initiateHttpClient = new HttpClient(httpClientHandler);
+            
+                              initiateHttpClient.DefaultRequestHeaders.Accept.Clear();
+                              initiateHttpClient.DefaultRequestHeaders.Clear();
+                              initiateHttpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                              initiateHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                              initiateHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                              initiateHttpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                              try
+                              {
+                                // Call Browser Flow API endpoint Initiate OP payment flow in browser
+                                Console.WriteLine("2. Initiating OP payment flow in browser to: " + browserUrl);
+                                var initiateResponse = await initiateHttpClient.GetAsync(browserUrl);
+                                var statusCode = (int)initiateResponse.StatusCode;
+            
+                                Console.WriteLine($"Response: {statusCode} {initiateResponse.ReasonPhrase} \n");
+            
+                                if (statusCode.ToString() == "302"){
+                                  /*
+                                    3. Refund payment
+                                  */
+                                  var refundUrl = URL + "/" + paymentId + "/refunds";
+            
+                                  string refundPayload = "{\"amount\":\"0.50\",\"currency\":\"EUR\",\"reference\":\"RF3517834735\"}";
+                                  var refundRequest = new StringContent(refundPayload, Encoding.UTF8, "application/json");
+            
+                                  string refundStringToSign = $"POST\napplication/json; charset=utf-8\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{refundUrl}\n{refundPayload}";
+                                  string refundSignature = CreateSignature(refundStringToSign, PRIVATE_KEY_FILE);
+            
+                                  string refundAuthorizationHeader = $"{MERCHANT_ID}:1:0:{refundSignature}";
+            
+                                  using var refundHttpClient = new HttpClient();
+                                  refundHttpClient.DefaultRequestHeaders.Accept.Clear();
+                                  refundHttpClient.DefaultRequestHeaders.Clear();
+                                  refundHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", refundAuthorizationHeader);
+                                  refundHttpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                                  refundHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                                  refundHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                                  refundHttpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                                  refundHttpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                                  refundHttpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                                  try {
+                                    Console.WriteLine("3. Refunding payment...");
+                                    var refundResponse = await refundHttpClient.PostAsync(refundUrl, refundRequest);
+            
+                                    if (refundResponse.IsSuccessStatusCode)
+                                    {
+                                        var refundResult = await refundResponse.Content.ReadAsStringAsync();
+                                        var formattedRefundJson = JToken.Parse(refundResult).ToString(Formatting.Indented);
+                                        Console.WriteLine($"Response: {formattedRefundJson}\n");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Error: {(int)refundResponse.StatusCode} - {refundResponse.ReasonPhrase}");
+                                        var refundErrorContent = await refundResponse.Content.ReadAsStringAsync();
+                                        Console.WriteLine($"Error details: {refundErrorContent}");
+                                    }
+                                  } catch (Exception ex) {
+                                    Console.WriteLine($"Exception occurred: {ex.Message}");
+                                  }
+                                }
+                              }
+                              catch (Exception ex)
+                              {
+                                  Console.WriteLine($"Exception occurred: {ex.Message}");
+                              }
+            
+                          }
+                          else
+                          {
+                              Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                              var errorContent = await response.Content.ReadAsStringAsync();
+                              Console.WriteLine($"Error details: {errorContent}");
+                          }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Exception occurred: {ex.Message}");
+                        }
+                    }
+            
+                    // Function for creating signature
+                    private static string CreateSignature(string stringToSign, string privateKeyPemFile)
+                    {
+                        var privateKeyPem = File.ReadAllText(privateKeyPemFile);
+            
+                        // Convert the PEM-formatted private key into an RSA object
+                        using var rsa = RSA.Create();
+                        rsa.ImportFromPem(privateKeyPem);
+            
+                        var messageBytes = Encoding.UTF8.GetBytes(stringToSign);
+                        var signatureBytes = rsa.SignData(messageBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                        return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower(); // Converts to hex
+                    }
+                }
+            }
+        - lang: "Java"
+          source: |
+            /**
+              OP Online Payment - REST API - Payments - Refund example
+              You need openssl installed to generate certificates and keys.
+            */
+            package example;
+            
+            import java.net.URI;
+            import java.net.http.HttpClient;
+            import java.net.http.HttpRequest;
+            import java.net.http.HttpRequest.BodyPublishers;
+            import java.net.http.HttpResponse;
+            import java.nio.charset.StandardCharsets;
+            import java.security.KeyFactory;
+            import java.security.PrivateKey;
+            import java.security.Signature;
+            import java.security.spec.PKCS8EncodedKeySpec;
+            import java.time.ZonedDateTime;
+            import java.time.format.DateTimeFormatter;
+            import java.util.Base64;
+            import java.util.UUID;
+            
+            import org.json.JSONObject;
+            
+            public class RESTAPIRefund {
+            
+                private static final String SERVER = "https://sandbox.apis.op.fi";
+                private static final String SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+                private static final String URL = SERVER + "/paymentbutton/v1/payments";
+            
+                private static final String API_KEY = "TODO: your API key"; // API key created in OP Developer
+                private static final String MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                private static final String PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page 
+            
+                public static void main(String[] args) throws Exception {
+                  try {
+                      // 1. Call REST API endpoint Create payment
+                      PrivateKey privateKey = getPrivateKey(PRIVATE_KEY_FILE);
+            
+                      ZonedDateTime date = ZonedDateTime.now();
+                      String sessionId = UUID.randomUUID().toString();
+                      String requestId = UUID.randomUUID().toString();
+                      String formattedDate = date.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            
+                      String payload = "{\"amount\":\"1.00\",\"cancel\":{\"url\":\"https://shop.example.com/cancel/path\"},\"reject\":{\"url\":\"https://shop.example.com/reject/path\"},\"return\":{\"url\":\"https://shop.example.com/return/path\"},\"currency\":\"EUR\",\"accountId\":\"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79\",\"reference\":\"RF3517834735\"}";
+            
+                      String stringToSign = "POST\n" +
+                              "application/json\n" +
+                              formattedDate + "\n" +
+                              MERCHANT_ID + "\n" +
+                              API_KEY + "\n" +
+                              sessionId + "\n" +
+                              requestId + "\n" +
+                              URL + "\n" +
+                              payload;
+            
+                      String signature = createSignature(stringToSign, privateKey);
+                      String authorizationHeader = MERCHANT_ID + ":1:0:" + signature;
+            
+                      HttpClient client = HttpClient.newHttpClient();
+                      HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(URL))
+                              .header("Authorization", authorizationHeader)
+                              .header("Date", formattedDate)
+                              .header("Accept", "application/json")
+                              .header("Content-Type", "application/json")
+                              .header("x-session-id", sessionId)
+                              .header("x-request-id", requestId)
+                              .header("x-api-key", API_KEY)
+                              .POST(BodyPublishers.ofString(payload))
+                              .build();
+            
+                      System.out.println("1. Calling REST API Create payment with request: " + request);
+                      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                      System.out.println("Response:\n" + new JSONObject(response.body()).toString(4));
+            
+                      try {
+                         // 2. Call Browser Flow API endpoint Initiate OP payment flow in browser
+                        String browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + new JSONObject(response.body()).getString("paymentOperationId") + "&paymentOperationValidation=" + new JSONObject(response.body()).getString("paymentOperationValidation");
+            
+                        HttpRequest initiateRequest = HttpRequest.newBuilder()
+                                .uri(URI.create(String.format(browserUrl)))
+                                .header("Date", formattedDate)
+                                .header("Accept", "application/json")
+                                .header("Content-Type", "application/json")
+                                .header("x-session-id", sessionId)
+                                .header("x-request-id", requestId)
+                                .header("x-api-key", API_KEY)
+                                .GET()
+                                .build();
+            
+                        System.out.println("2. Initiating OP payment flow in browser to " + browserUrl);
+                        HttpResponse<String> initiateResponse = client.send(initiateRequest, HttpResponse.BodyHandlers.ofString());
+                        System.out.println("Response: " + initiateResponse + " " + initiateResponse.body());
+                        System.out.println("status: " + initiateResponse.statusCode());
+            
+                        if (initiateResponse.statusCode() == 302){
+                           // 3. Refund
+                           System.out.println("3. Initiating refund...");
+            
+                           String refundUrl = URL + "/" + new JSONObject(response.body()).getString("paymentId") + "/refunds";
+                           String refundDate = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
+                           String refundSessionId = UUID.randomUUID().toString();
+                           String refundRequestId = UUID.randomUUID().toString();
+                           String refundPayload = "{\"amount\":\"0.50\",\"currency\":\"EUR\",\"reference\":\"RF3517834735\"}";
+            
+                           String refundStringToSign = "POST\n" +
+                             "application/json\n" +
+                             refundDate + "\n" +
+                             MERCHANT_ID + "\n" +
+                             API_KEY + "\n" +
+                             refundSessionId + "\n" +
+                             refundRequestId + "\n" +
+                             refundUrl + "\n" +
+                             refundPayload;
+            
+                             String refundSignature = createSignature(refundStringToSign, privateKey);
+                             String refundAuthorizationHeader = MERCHANT_ID + ":1:0:" + refundSignature;
+            
+                             HttpRequest refundRequest = HttpRequest.newBuilder()
+                                     .uri(URI.create(refundUrl))
+                                     .header("Authorization", refundAuthorizationHeader)
+                                     .header("Date", refundDate)
+                                     .header("Accept", "application/json")
+                                     .header("Content-Type", "application/json")
+                                     .header("x-session-id", refundSessionId)
+                                     .header("x-request-id", refundRequestId)
+                                     .header("x-api-key", API_KEY)
+                                     .POST(BodyPublishers.ofString(refundPayload))
+                                     .build();
+            
+                           try {
+                             HttpResponse<String> refundResponse = client.send(refundRequest, HttpResponse.BodyHandlers.ofString());
+                             System.out.println("Response: " + refundResponse + " " + new JSONObject(refundResponse.body()).toString(4));
+            
+                           } catch (Exception e) {
+                               e.printStackTrace();
+                           }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
+                }
+            
+                static PrivateKey getPrivateKey(String fileName) throws Exception {
+                  // Assuming the private key is in PKCS#8 PEM format
+                  String keyPEM = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(fileName)), StandardCharsets.UTF_8)
+                          .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+                          .replaceAll("-----END PRIVATE KEY-----", "")
+                          .replaceAll("\\s", "");
+            
+                  byte[] decoded = Base64.getDecoder().decode(keyPEM);
+                  PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+                  KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                  return keyFactory.generatePrivate(spec);
+                }
+            
+                static String createSignature(String stringToSign, PrivateKey privateKey) throws Exception {
+                  // Initialize a Signature object with the SHA256withRSA algorithm
+                  Signature signature = Signature.getInstance("SHA256withRSA");
+                  signature.initSign(privateKey);
+                  signature.update(stringToSign.getBytes(StandardCharsets.UTF_8));
+            
+                  // Sign the data and get the resulting signature bytes
+                  byte[] signatureBytes = signature.sign();
+            
+                  // Convert the signature bytes to a hex string
+                  StringBuilder hexString = new StringBuilder();
+                  for (byte b : signatureBytes) {
+                      String hex = Integer.toHexString(0xff & b);
+                      if (hex.length() == 1) hexString.append('0');
+                      hexString.append(hex);
+                  }
+                  return hexString.toString();
+                }
+            }
+        - lang: "JavaScript"
+          label: "Node.js"
+          source: |
+            /*
+              OP Online Payment - REST API - Payments - Refund example script
+            
+              To run this you need openssl and jq installed in addition to a Node.js runtime (or a Node.js virtual machine such as nvm).
+              The example can be run on Node.js runtime versions 17.0 and above.
+            */
+            
+            const crypto = require('crypto');
+            const https = require('https');
+            const axios = require('axios');
+            axios.defaults.maxRedirects = 0;
+            const fs = require('fs');
+            
+            const SERVER = "https://sandbox.apis.op.fi/paymentbutton";
+            const SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi";
+            const url = SERVER + "/v1/payments";
+            
+            const apiKey = "TODO: your API key";                               // API key created in OP Developer
+            const merchantId = "TODO: your merchant ID";                       // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            const privateKey = fs.readFileSync('TODO: your private key file'); // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            // Main application logic
+            (async () => {
+              // Initiate payment
+              console.log("1. Initiating an Online Payment payment process...");
+              const date = new Date();
+              const sessionId = crypto.randomUUID();
+              const requestId = crypto.randomUUID();
+            
+              const payload = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}';
+            
+              const stringToSign = "POST\n" +
+              "application/json\n" +
+              date.toUTCString() + "\n" +
+              merchantId + "\n" +
+              apiKey + "\n" +
+              sessionId + "\n" +
+              requestId + "\n" +
+              url + "\n" +
+              payload;
+            
+              // Create signature
+              const signature = createSignature(stringToSign);
+            
+              const authorizationHeader = merchantId + ":1:0:" + signature;
+              headers = {
+                  "Authorization": authorizationHeader,
+                  "Date": date.toUTCString(),
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "x-session-id": sessionId,
+                  "x-request-id": requestId,
+                  "x-api-key": apiKey
+              };
+            
+              try {
+                // Call OP Online Payment REST API endpoint Create Payment
+                const response = await axios.post(`${url}`, payload, {
+                  headers: headers
+                });
+                console.log("Response: ", response.data);
+                try {
+                  // 2. Call Browser Flow API endpoint Initiate OP payment flow in browser
+                  const browserUrl = SERVER_FRONT + "/customer/payment/startPaymentConfirmation?paymentOperationId=" + response.data.paymentOperationId + "&paymentOperationValidation=" + response.data.paymentOperationValidation;
+            
+                  headers = {
+                      "Date": date.toUTCString(),
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                      "x-session-id": sessionId,
+                      "x-request-id": requestId,
+                      "x-api-key": apiKey
+                  };
+                  console.log("\n2. Launching payment browser flow request to " + browserUrl);
+                  const flowResponse = await axios.get(`${browserUrl}`, {
+                    headers: headers
+                  });
+                } catch (error) {
+                  console.log("Response: " + error.response.status + " " + error.response.statusText + "\n");
+                  if (error.response.status == '302'){
+                      // 3. Refund
+                      const refundUrl = url + "/" + response.data.paymentId + "/refunds";
+                      const refundDate = new Date();
+                      const refundRequestId = crypto.randomUUID();
+                      const refundSessionId = crypto.randomUUID();
+                      const refundPayload = '{"amount":"0.50","currency":"EUR","reference":"RF3517834735"}';
+            
+                      const refundStringToSign = "POST\n" +
+                        "application/json\n" +
+                        refundDate.toUTCString() + "\n" +
+                        merchantId + "\n" +
+                        apiKey + "\n" +
+                        refundSessionId + "\n" +
+                        refundRequestId + "\n" +
+                        refundUrl + "\n" +
+                        refundPayload;
+            
+                      refundSignature = createSignature(refundStringToSign);
+                      const refundAuthorizationHeader = merchantId + ":1:0:" + refundSignature;
+            
+                      const refundHeaders = {
+                          "Authorization": refundAuthorizationHeader,
+                          "Date": refundDate.toUTCString(),
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                          "x-session-id": refundSessionId,
+                          "x-request-id": refundRequestId,
+                          "x-api-key": apiKey
+                      };
+                      try {
+                        // Call OP Online Payment REST API endpoint Refund
+                        console.log("3. Initiating refund...");
+                        const response = await axios.post(`${refundUrl}`, refundPayload, {
+                          headers: refundHeaders
+                        });
+                        console.log("Response: ", response.data);
+                      } catch (error) {
+                        console.error("Error refunding payment", error);
+                      }
+                  }
+                }
+              } catch (error) {
+                console.error("Error initiating payment", error);
+              }
+            })();
+            
+            function createSignature(stringToSign) {
+              const sign = crypto.createSign('SHA256');
+              sign.update(stringToSign);
+            
+              // Sign data with private key, convert to hex and remove padding characters
+              const signature = sign.sign({key: privateKey})
+                .toString('hex')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/\s/g, '');
+            
+              return signature;
+            }
+        - lang: "PHP"
+          source: |
+            <?php
+            /******************************************************************************
+            
+              OP Online Payment - REST API - Payments - Refund PHP code example
+            
+              This is an example PHP script for using Refund endpoint.
+            
+              Note, This code assumes that you have the guzzlehttp/guzzle and Ramsey/uuid
+              packages installed for making HTTP requests and using uuid:s!
+              You can install them with Composer:
+            
+                composer require guzzlehttp/guzzle
+                composer require ramsey/uuid
+            
+                (Make sure you have installed php curl extension)
+            
+              You also need to have registered a developer application and to have generated
+              a valid API key & API secret in OP Developer.
+            
+            *******************************************************************************/
+            
+            require 'vendor/autoload.php';
+            
+            use GuzzleHttp\Client;
+            use GuzzleHttp\Exception\GuzzleException;
+            use GuzzleHttp\RequestOptions;
+            use Ramsey\Uuid\Uuid;
+            
+            // Credentials
+            $apiKey = "TODO: your API key";                   // API key created in OP Developer
+            $privateKeyFile = "TODO: your private key file";  // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            $merchantId = "TODO: your merchant ID";           // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            // Host details
+            $server = "https://sandbox.apis.op.fi";
+            $serverFront = "https://api.smn-sandbox.aws.op-palvelut.fi";
+            $path = "/paymentbutton/v1/payments";
+            $url = $server . $path;
+            
+            // Initialize client
+            $client = new Client([
+                'base_uri' => $server
+            ]);
+            
+            // #################
+            // 1. Create payment
+            // #################
+            echo "1. Initiating an Online Payment payment process...\n";
+            
+            $date = new DateTime('UTC');
+            $formattedDate = $date->format('D, d M Y H:i:s \G\M\T');
+            
+            $requestId = Uuid::uuid4()->toString();
+            $sessionId = Uuid::uuid4()->toString();
+            
+            $paymentDetails = [
+                'amount' => '1.00',
+                'cancel' => ['url' => 'https://shop.example.com/cancel/path'],
+                'reject' => ['url' => 'https://shop.example.com/reject/path'],
+                'return' => ['url' => 'https://shop.example.com/return/path'],
+                'currency' => 'EUR',
+                'accountId' => '8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79',
+                'reference' => 'RF3517834735'
+            ];
+            $payload = json_encode($paymentDetails);
+            
+            // Load the private key
+            $privateKey = openssl_pkey_get_private("file://$privateKeyFile");
+            
+            $stringToSign = "POST" . "\n"
+            . "application/json" . "\n"
+            . $formattedDate . "\n"
+            . $merchantId . "\n"
+            . $apiKey . "\n"
+            . $sessionId . "\n"
+            . $requestId. "\n"
+            . $url . "\n"
+            . $payload;
+            
+            openssl_sign($stringToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            // Constructing the Authorization header
+            $algorithm = 1; // For SHA-256
+            $keyVersion = 0; // Example version, adjust as necessary
+            $authorizationHeader = $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($signature);
+            
+            $header = [
+                'Authorization' => $authorizationHeader,
+                'Date' => $formattedDate,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'x-session-id' => $sessionId,
+                'x-request-id' => $requestId,
+                'x-api-key' => $apiKey,
+            ];
+            
+            // Make the request
+            try {
+                $response = $client->post($path, [
+                    'headers' => $header,
+                    'body' => $payload
+                ]);
+                echo "Response: " . $response->getStatusCode() . " " . $response->getReasonPhrase() . "\n";
+                $responseArray = json_decode($response->getBody(), true);
+                $responseJson = json_encode($responseArray, JSON_PRETTY_PRINT);
+                echo $responseJson . "\n\n";
+            
+                // ######################################
+                // 2. Initiate OP payment flow in browser
+                // ######################################
+                $browserPath = "/customer/payment/startPaymentConfirmation?paymentOperationId=" . $responseArray['paymentOperationId'] . "&paymentOperationValidation=" . $responseArray['paymentOperationValidation'];
+                $header = [
+                    'Date' => $formattedDate,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'x-session-id' => $sessionId,
+                    'x-request-id' => $requestId,
+                    'x-api-key' => $apiKey
+                ];
+                echo "2. Initiating OP payment flow request to " . $serverFront . $browserPath ."\n";
+            
+                $browserClient = new Client([
+                    'base_uri' => $serverFront,
+                    'allow_redirects' => false
+                ]);
+            
+                $initiateResponse = $browserClient->get($browserPath, [
+                    'headers' => $header
+                ]);
+                echo "Response: " . $initiateResponse->getStatusCode() . " " . $initiateResponse->getReasonPhrase() . "\n\n";
+            
+                // #################
+                // 3. Refund payment
+                // #################
+                if ($initiateResponse->getStatusCode() == '302'){
+                  echo "3. Refunding payment...\n";
+                  $refundPath = $path . "/" . $responseArray['paymentId'] . "/refunds";
+                  $refundUrl = $server . $refundPath;
+            
+                  $refundDate = new DateTime('UTC');
+                  $refundFormattedDate = $refundDate->format('D, d M Y H:i:s \G\M\T');
+                  $refundRequestId = Uuid::uuid4()->toString();
+                  $refundSessionId = Uuid::uuid4()->toString();
+            
+                  $refundDetails = [
+                      'amount' => '0.50',
+                      'currency' => 'EUR',
+                      'reference' => 'RF3517834735'
+                  ];
+                  $refundPayload = json_encode($refundDetails);
+            
+                  $refundStringToSign = "POST" . "\n"
+                  . "application/json" . "\n"
+                  . $refundFormattedDate . "\n"
+                  . $merchantId . "\n"
+                  . $apiKey . "\n"
+                  . $refundSessionId . "\n"
+                  . $refundRequestId. "\n"
+                  . $refundUrl . "\n"
+                  . $refundPayload;
+            
+                  openssl_sign($refundStringToSign, $refundSignature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+                  $refundAuthorizationHeader =  $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($refundSignature);
+            
+                  $header = [
+                      'Authorization' => $refundAuthorizationHeader,
+                      'Date' => $refundFormattedDate,
+                      'Accept' => 'application/json',
+                      'Content-Type' => 'application/json',
+                      'x-session-id' => $refundSessionId,
+                      'x-request-id' => $refundRequestId,
+                      'x-api-key' => $apiKey
+                  ];
+            
+                  $refundResponse = $client->post($refundPath, [
+                      'headers' => $header,
+                      'body' => $refundPayload
+                  ]);
+                  echo "Response: " . $refundResponse->getStatusCode() . " " . $refundResponse->getReasonPhrase() . "\n";
+                  $refundResponseArray = json_decode($refundResponse->getBody(), true);
+                  $refundResponseJson = json_encode($refundResponseArray, JSON_PRETTY_PRINT);
+                  echo $refundResponseJson . "\n\n";
+            
+                }
+            } catch (GuzzleException $e) {
+                echo "Request failed: " . $e->getMessage() . "\n";
+            }
+            ?>
+        - lang: "Python"
+          source: |
+            """
+            OP Online Payment - REST API - Payments - Refund example script
+            
+            Note, This code assumes that you have the python and requests library installed
+            for making HTTP requests. You also need to have registered a developer application
+            and to have generated a valid API key & API secret in OP Developer.
+            
+            """
+            from datetime import datetime, timezone
+            from cryptography.hazmat.primitives import serialization, hashes
+            from cryptography.hazmat.primitives.asymmetric import padding
+            import json
+            import os
+            import requests
+            import urllib.parse
+            import uuid
+            
+            # Credentials
+            API_KEY = "TODO: your API key"                   # API key created in OP Developer
+            MERCHANT_ID = "TODO: your merchant ID"           # Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            PRIVATE_KEY_FILE = "TODO: your private key file" # The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            # Host details
+            SERVER = "https://sandbox.apis.op.fi/paymentbutton"
+            SERVER_FRONT = "https://api.smn-sandbox.aws.op-palvelut.fi"
+            
+            ### 1. Initiate Online Payment process
+            URL = f"{SERVER}/v1/payments"
+            
+            # Signature details
+            DATE = datetime.now(timezone.utc).strftime("%a, %d %b %Y %T GMT")
+            SESSION_ID = str(uuid.uuid4()).lower()
+            REQUEST_ID = str(uuid.uuid4()).lower()
+            REQUEST_BODY = '{"amount":"1.00","cancel":{"url":"https://shop.example.com/cancel/path"},"reject":{"url":"https://shop.example.com/reject/path"},"return":{"url":"https://shop.example.com/return/path"},"currency":"EUR","accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79","reference":"RF3517834735"}'
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            SIGNATURE_BASE = f"""POST
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            {REQUEST_BODY}"""
+            
+            with open(PRIVATE_KEY_FILE, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("1. Initiating an Online Payment payment process...")
+            response = requests.post(URL, headers=headers, data=REQUEST_BODY)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}\n")
+            
+            payment_response = response.json()
+            
+            ### 2. Initiate OP payment flow in browser
+            URL = f"{SERVER_FRONT}/customer/payment/startPaymentConfirmation?paymentOperationId={payment_response['paymentOperationId']}&paymentOperationValidation={urllib.parse.quote(payment_response['paymentOperationValidation'])}"
+            
+            headers = {
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print(f"2. Launching payment browser flow request to {URL}")
+            response = requests.get(URL, headers=headers, allow_redirects=False)
+            print(f"Response: {response.status_code} {response.reason}\n{response.text}")
+            
+            ### 3. Refund
+            URL = f"{SERVER}/v1/payments/{payment_response['paymentId']}/refunds"
+            
+            # Signature details
+            DATE = datetime.now(timezone.utc).strftime("%a, %d %b %Y %T GMT")
+            SESSION_ID = str(uuid.uuid4()).lower()
+            REQUEST_ID = str(uuid.uuid4()).lower()
+            REQUEST_BODY = '{"amount":"0.50","currency":"EUR","reference":"RF3517834735"}'
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            SIGNATURE_BASE = f"""POST
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            {REQUEST_BODY}"""
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("3. Initiating refund...")
+            response = requests.post(URL, headers=headers, data=REQUEST_BODY)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}\n")
+  /v1/payments/multibank/providers:
+    get:
+      summary: List of banks in multibank service
+      description: >
+        Returns a list of supported banks and their statuses for the OP Online
+        Payment multibank service (add-on service).
+
+        The IDs can be used to initiate a payment in banks other than OP (with
+        the [Browser flow
+        API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API)).
+
+        The returned list is unlikely to change frequently and it is recommended
+        to store the returned bankId:s in the client-side instead of re-fetching
+        the list every time.
+      operationId: getMultibankPaymentProviders
+      tags:
+        - Other bank providers
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultibankProvidersResponse'
+              examples:
+                response:
+                  value:
+                    providers:
+                      - bankId: Bank1
+                        countryCode: FI
+                        name: Bank of ones
+                        status:
+                          current: ENABLED
+                      - bankId: Bank2
+                        countryCode: FI
+                        name: Bank of twos
+                        status:
+                          current: ENABLED
+        '400':
+          description: >-
+            Bad request. Invalid request parameters or business rules prevent
+            the request from being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentErrorResponseModel'
+              examples:
+                response:
+                  value:
+                    Id: 2e80f2f9-b31f-48e5-958c-b250281c1b00
+                    level: ERROR
+                    type: TECHNICAL
+        '401':
+          description: Unauthorized. Request could not be authenticated / authorized.
+        '500':
+          description: >-
+            Internal server error. Request could not be processed due to a
+            temporary technical issue.
+      security:
+        - xApiKey: []
+          Authorization: []
+      x-codeSamples:
+        - lang: cURL
+          label: CLI
+          source: >
+            curl --request GET \
+            --url
+            'https://sandbox.apis.op.fi/paymentbutton/v1/payments/multibank/providers'
+            \
+            --header 'Date: Tue, 02 Nov 2021 14:40:12 GMT' \
+            --header 'x-request-id: 0079ae15-395a-4a45-bcba-502538f62654' \
+            --header 'x-session-id: 38cda2a2-2b5c-47ca-b06a-be8170e7becc' \
+            --header 'x-api-key: 3AL1...' \
+            --header 'Authorization:
+            c3efaaee-a6bb-449f-9213-e45e23a462ef:1:1:ab64246fd9512...'
+        - lang: "C#"
+          source: |
+            /*
+                OP Online Payment - REST API - Payment status example
+            */
+            
+            namespace RESTAPIPaymentStatus
+            {
+                using System;
+                using System.Net.Http;
+                using System.IO;
+                using System.Text;
+                using System.Security.Cryptography;
+                using Newtonsoft.Json;
+                using Newtonsoft.Json.Linq;
+            
+                public class Program
+                {
+                    private const string SERVER = "https://sandbox.apis.op.fi";
+                    private const string URL = SERVER + "/paymentbutton/v1/payments/multibank/providers";
+            
+                    private const string API_KEY = "TODO: your API key"; // API key created in OP Developer
+                    private const string MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                    private const string PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+                    static async Task Main(string[] args)
+                    {
+                        /*
+                          1. Request bank providers in multibank service
+                        */
+                        string formattedDate = DateTime.UtcNow.ToString("r");
+                        string sessionId = Guid.NewGuid().ToString();
+                        string requestId = Guid.NewGuid().ToString();
+            
+                        string stringToSign = $"GET\n\n{formattedDate}\n{MERCHANT_ID}\n{API_KEY}\n{sessionId}\n{requestId}\n{URL}\n";
+                        string signature = CreateSignature(stringToSign, PRIVATE_KEY_FILE);
+            
+                        string authorizationHeader = $"{MERCHANT_ID}:1:0:{signature}";
+            
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Accept.Clear();
+                        httpClient.DefaultRequestHeaders.Clear();
+                        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorizationHeader);
+                        httpClient.DefaultRequestHeaders.Add("Date", formattedDate);
+                        httpClient.DefaultRequestHeaders.Add("x-session-id", sessionId);
+                        httpClient.DefaultRequestHeaders.Add("x-request-id", requestId);
+                        httpClient.DefaultRequestHeaders.Add("x-api-key", API_KEY);
+            
+                        try
+                         {
+                          Console.WriteLine("Requesting list of banks in multibank service...\n");
+                          var response = await httpClient.GetAsync(URL);
+            
+                          if (response.IsSuccessStatusCode)
+                          {
+                              var result = await response.Content.ReadAsStringAsync();
+                              var formattedJson = JToken.Parse(result).ToString(Formatting.Indented);
+                              Console.WriteLine($"Response: {formattedJson}\n");
+                          }
+                          else
+                          {
+                              Console.WriteLine($"Error: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                              var errorContent = await response.Content.ReadAsStringAsync();
+                              Console.WriteLine($"Error details: {errorContent}");
+                          }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Exception occurred: {ex.Message}");
+                        }
+                    }
+            
+                    // Function for creating signature
+                    private static string CreateSignature(string stringToSign, string privateKeyPemFile)
+                    {
+                        var privateKeyPem = File.ReadAllText(privateKeyPemFile);
+            
+                        // Convert the PEM-formatted private key into an RSA object
+                        using var rsa = RSA.Create();
+                        rsa.ImportFromPem(privateKeyPem);
+            
+                        var messageBytes = Encoding.UTF8.GetBytes(stringToSign);
+                        var signatureBytes = rsa.SignData(messageBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                        return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower(); // Converts to hex
+                    }
+                }
+            }
+        - lang: "Java"
+          source: |
+            /**
+              OP Online Payment - REST API - Payments - Bank providers example
+              You need openssl installed to generate certificates and keys.
+            */
+            package example;
+            
+            import java.net.URI;
+            import java.net.http.HttpClient;
+            import java.net.http.HttpRequest;
+            import java.net.http.HttpResponse;
+            import java.nio.charset.StandardCharsets;
+            import java.security.KeyFactory;
+            import java.security.PrivateKey;
+            import java.security.Signature;
+            import java.security.spec.PKCS8EncodedKeySpec;
+            import java.time.ZonedDateTime;
+            import java.time.format.DateTimeFormatter;
+            import java.util.Base64;
+            import java.util.UUID;
+            
+            import org.json.JSONObject;
+            
+            public class RESTAPIBankProviders {
+            
+                private static final String SERVER= "https://sandbox.apis.op.fi";
+                private static final String URL = SERVER + "/paymentbutton/v1/payments/multibank/providers";
+            
+                private static final String API_KEY = "TODO: your API key"; // API key created in OP Developer
+                private static final String MERCHANT_ID = "TODO: your merchant ID"; // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+                private static final String PRIVATE_KEY_FILE = "TODO: your private key file"; // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page 
+            
+                public static void main(String[] args) throws Exception {
+                  try {
+                      PrivateKey privateKey = getPrivateKey(PRIVATE_KEY_FILE);
+            
+                      ZonedDateTime date = ZonedDateTime.now();
+                      String sessionId = UUID.randomUUID().toString();
+                      String requestId = UUID.randomUUID().toString();
+                      String formattedDate = date.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            
+                      String stringToSign = "GET\n" +
+                              "application/json\n" +
+                              formattedDate + "\n" +
+                              MERCHANT_ID + "\n" +
+                              API_KEY + "\n" +
+                              sessionId + "\n" +
+                              requestId + "\n" +
+                              URL + "\n";
+            
+                      String signature = createSignature(stringToSign, privateKey);
+                      String authorizationHeader = MERCHANT_ID + ":1:0:" + signature;
+            
+                      HttpClient client = HttpClient.newHttpClient();
+                      HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(URL))
+                              .header("Authorization", authorizationHeader)
+                              .header("Date", formattedDate)
+                              .header("Accept", "application/json")
+                              .header("Content-Type", "application/json")
+                              .header("x-session-id", sessionId)
+                              .header("x-request-id", requestId)
+                              .header("x-api-key", API_KEY)
+                              .GET()
+                              .build();
+            
+                      System.out.println("1. Calling REST API Bank providers with request: " + request);
+                      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                      System.out.println("Response:\n" + new JSONObject(response.body()).toString(4));
+            
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
+                }
+            
+                static PrivateKey getPrivateKey(String fileName) throws Exception {
+                  // Assuming the private key is in PKCS#8 PEM format
+                  String keyPEM = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(fileName)), StandardCharsets.UTF_8)
+                          .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+                          .replaceAll("-----END PRIVATE KEY-----", "")
+                          .replaceAll("\\s", "");
+            
+                  byte[] decoded = Base64.getDecoder().decode(keyPEM);
+                  PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+                  KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                  return keyFactory.generatePrivate(spec);
+                }
+            
+                static String createSignature(String stringToSign, PrivateKey privateKey) throws Exception {
+                  // Initialize a Signature object with the SHA256withRSA algorithm
+                  Signature signature = Signature.getInstance("SHA256withRSA");
+                  signature.initSign(privateKey);
+                  signature.update(stringToSign.getBytes(StandardCharsets.UTF_8));
+            
+                  // Sign the data and get the resulting signature bytes
+                  byte[] signatureBytes = signature.sign();
+            
+                  // Convert the signature bytes to a hex string
+                  StringBuilder hexString = new StringBuilder();
+                  for (byte b : signatureBytes) {
+                      String hex = Integer.toHexString(0xff & b);
+                      if (hex.length() == 1) hexString.append('0');
+                      hexString.append(hex);
+                  }
+                  return hexString.toString();
+                }
+            }
+        - lang: "JavaScript"
+          label: "Node.js"
+          source: |
+            /*
+              OP Online Payment - REST API - Payments - Bank providers example script
+            
+              To run this you need openssl and jq installed in addition to a Node.js runtime (or a Node.js virtual machine such as nvm).
+              The example can be run on Node.js runtime versions 17.0 and above.
+            
+            */
+            
+            const crypto = require('crypto');
+            const https = require('https');
+            const axios = require('axios');
+            const fs = require('fs');
+            
+            const SERVER = "https://sandbox.apis.op.fi";
+            const url = SERVER + "/paymentbutton/v1/payments/multibank/providers";
+            
+            const apiKey = "TODO: your API key";                               // API key created in OP Developer
+            const merchantId = "TODO: your merchant ID";                       // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            const privateKey = fs.readFileSync('TODO: your private key file'); // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            // Main application logic
+            (async () => {
+              // Request bank providers
+              console.log("Requesting list of banks in multibank service...\n");
+              const date = new Date();
+              const sessionId = crypto.randomUUID();
+              const requestId = crypto.randomUUID();
+            
+              const stringToSign = "GET\n" +
+              "application/json\n" +
+              date.toUTCString() + "\n" +
+              merchantId + "\n" +
+              apiKey + "\n" +
+              sessionId + "\n" +
+              requestId + "\n" +
+              url + "\n";
+            
+              // Create signature
+              const signature = createSignature(stringToSign);
+            
+              const authorizationHeader = merchantId + ":1:0:" + signature;
+              headers = {
+                  "Authorization": authorizationHeader,
+                  "Date": date.toUTCString(),
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "x-session-id": sessionId,
+                  "x-request-id": requestId,
+                  "x-api-key": apiKey
+              };
+            
+              try {
+                // Call OP Online Payment REST API endpoint Bank providers
+                const response = await axios.get(`${url}`, {
+                  headers: headers
+                });
+                console.log("Response: ", JSON.stringify(response.data, null, 2));
+              } catch (error) {
+                console.error("Error requesting list of banks", error);
+              }
+            })();
+            
+            function createSignature(stringToSign) {
+              const sign = crypto.createSign('SHA256');
+              sign.update(stringToSign);
+            
+              // Sign data with private key, convert to hex and remove padding characters
+              const signature = sign.sign({key: privateKey})
+                .toString('hex')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/\s/g, '');
+            
+              return signature;
+            }
+        - lang: "PHP"
+          source: |
+            <?php
+            /******************************************************************************
+            
+              OP Online Payment - REST API - Bank providers PHP code example
+            
+              This is an example PHP script for using Bank providers endpoint.
+            
+              Note, This code assumes that you have the guzzlehttp/guzzle and Ramsey/uuid
+              packages installed for making HTTP requests and using uuid:s!
+              You can install them with Composer:
+            
+                composer require guzzlehttp/guzzle
+                composer require ramsey/uuid
+            
+                (Make sure you have installed php curl extension)
+            
+              You also need to have registered a developer application and to have generated
+              a valid API key & API secret in OP Developer.
+            
+            *******************************************************************************/
+            
+            require 'vendor/autoload.php';
+            
+            use GuzzleHttp\Client;
+            use GuzzleHttp\Exception\GuzzleException;
+            use GuzzleHttp\RequestOptions;
+            use Ramsey\Uuid\Uuid;
+            
+            // Credentials
+            $apiKey = "TODO: your API key";                   // API key created in OP Developer
+            $privateKeyFile = "TODO: your private key file";  // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            $merchantId = "TODO: your merchant ID";           // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            
+            // Host details
+            $server = "https://sandbox.apis.op.fi";
+            $path = "/paymentbutton/v1/payments/multibank/providers";
+            $url = $server . $path;
+            
+            // Initialize client
+            $client = new Client([
+                'base_uri' => $server
+            ]);
+            
+            // #########################
+            // 1. Request bank providers
+            // #########################
+            echo "1. Requesting list of banks in multibank service...\n";
+            
+            $date = new DateTime('UTC');
+            $formattedDate = $date->format('D, d M Y H:i:s \G\M\T');
+            
+            $requestId = Uuid::uuid4()->toString();
+            $sessionId = Uuid::uuid4()->toString();
+            
+            // Load the private key
+            $privateKey = openssl_pkey_get_private("file://$privateKeyFile");
+            
+            $stringToSign = "GET" . "\n"
+            . "application/json" . "\n"
+            . $formattedDate . "\n"
+            . $merchantId . "\n"
+            . $apiKey . "\n"
+            . $sessionId . "\n"
+            . $requestId. "\n"
+            . $url . "\n";
+            
+            openssl_sign($stringToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            // Constructing the Authorization header
+            $algorithm = 1; // For SHA-256
+            $keyVersion = 0; // Example version, adjust as necessary
+            $authorizationHeader = $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($signature);
+            
+            $header = [
+                'Authorization' => $authorizationHeader,
+                'Date' => $formattedDate,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'x-session-id' => $sessionId,
+                'x-request-id' => $requestId,
+                'x-api-key' => $apiKey,
+            ];
+            
+            // Make the request
+            try {
+                $response = $client->get($path, [
+                    'headers' => $header
+                ]);
+                echo "Response: " . $response->getStatusCode() . " " . $response->getReasonPhrase() . "\n";
+                $responseArray = json_decode($response->getBody(), true);
+                $responseJson = json_encode($responseArray, JSON_PRETTY_PRINT);
+                echo $responseJson . "\n\n";
+            } catch (GuzzleException $e) {
+                echo "Request failed: " . $e->getMessage() . "\n";
+            }
+            ?>
+        - lang: "Python"
+          source: |
+            """
+            OP Online Payment - REST API - Other bank providers - List of banks in
+            multibank service example script
+            
+            Note, This code assumes that you have the python and requests library installed
+            for making HTTP requests. You also need to have registered a developer application
+            and to have generated a valid API key & API secret in OP Developer.
+            
+            """
+            from datetime import datetime, timezone
+            from cryptography.hazmat.primitives import serialization, hashes
+            from cryptography.hazmat.primitives.asymmetric import padding
+            import json
+            import requests
+            import uuid
+            
+            # Credentials
+            API_KEY = "TODO: your API key"                   # API key created in OP Developer
+            MERCHANT_ID = "TODO: your merchant ID"           # Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
+            PRIVATE_KEY_FILE = "TODO: your private key file" # The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
+            
+            # Host details
+            SERVER = "https://sandbox.apis.op.fi/paymentbutton"
+            
+            ### 1. Initiate Online Payment process
+            URL = f"{SERVER}/v1/payments/multibank/providers"
+            DATE = datetime.now(timezone.utc).strftime("%a, %d %b %Y %T GMT")
+            SESSION_ID = str(uuid.uuid4()).lower()
+            REQUEST_ID = str(uuid.uuid4()).lower()
+            
+            # No trailing newline at the end of the signature base!
+            # Only single LF (\n) characters used as newline characters
+            
+            SIGNATURE_BASE = f"""GET
+            application/json
+            {DATE}
+            {MERCHANT_ID}
+            {API_KEY}
+            {SESSION_ID}
+            {REQUEST_ID}
+            {URL}
+            """
+            
+            with open(PRIVATE_KEY_FILE, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+            
+            signature = private_key.sign(SIGNATURE_BASE.encode(), padding.PKCS1v15(), hashes.SHA256()).hex()
+            
+            headers = {
+                "Authorization": f"{MERCHANT_ID}:1:0:{signature}",
+                "Date": DATE,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "x-session-id": SESSION_ID,
+                "x-request-id": REQUEST_ID,
+                "x-api-key": API_KEY,
+            }
+            print("Requesting list of banks in multibank service...")
+            response = requests.get(URL, headers=headers)
+            print(f"Response: {response.status_code} {response.reason}\n{json.dumps(response.json(), indent=2)}")
+components:
+  parameters:
+    date:
+      in: header
+      name: Date
+      required: true
+      description: >-
+        Standard HTTP Date header containing the date and time (GMT) when the
+        request was sent (for example: Wed, 21 Oct 2019 07:28:00 GMT).
+      schema:
+        type: string
+    paymentId:
+      in: path
+      name: paymentId
+      required: true
+      description: Seller specified unique id for payment
+      schema:
+        type: string
+        maxLength: 36
+    x-request-id:
+      in: header
+      name: x-request-id
+      required: true
+      description: >
+        Unique identifier (UUID) of the request. Each request must have a unique
+        request ID. Each x-session-id and x-request-id combination can only be
+        used once.
+      schema:
+        type: string
+        format: uuid
+        maxLength: 36
+    x-session-id:
+      in: header
+      name: x-session-id
+      required: true
+      description: >
+        Unique identifier (UUID) of the session. All requests in the same
+        session should use the same session ID. Each x-session-id and
+        x-request-id combination can only be used once.
+      schema:
+        type: string
+        format: uuid
+        maxLength: 36
+  securitySchemes:
+    xApiKey:
+      in: header
+      name: x-api-key
+      type: apiKey
+      description: API key for accessing a service.
+    Authorization:
+      in: header
+      name: Authorization
+      type: apiKey
+      description: >-
+        The HMAC signature for the request (see [Authentication
+        Signatures](https://op-developer.fi/p/hmac-authentication)).
+  schemas:
+    Message:
+      properties:
+        rows:
+          type: array
+          deprecated: true
+          description: '`deprecated` Payment message.'
+          items:
+            type: string
+            format: alphanumeric with spaces
+            maxLength: 35
+          maxItems: 10
+          minItems: 1
+    RefundMessage:
+      properties:
+        rows:
+          type: array
+          description: >-
+            Refund payment message field. Will be shown in payment recipient's
+            balance sheet. Refund must have reference or message, but not both.
+          items:
+            type: string
+            format: alphanumeric with spaces
+            maxLength: 35
+          maxItems: 10
+          minItems: 1
+    Beneficiary:
+      properties:
+        name:
+          type: string
+          format: alphanumeric
+          maxLength: 30
+          minLength: 1
+          description: Beneficiary name if other than default merchant name
+        account:
+          type: string
+          format: alphanumeric
+          maxLength: 35
+          minLength: 8
+          description: Account if other than default merchant's account
+    RefundStatus:
+      type: object
+      required:
+        - paymentId
+        - status
+      properties:
+        paymentId:
+          type: string
+          maxLength: 36
+          description: Payment id of the payment which status is queried
+        amount:
+          type: string
+          example: '10.00'
+          description: Refund amount to an accuracy of two decimal places
+        status:
+          enum:
+            - INITIAL
+            - PAID
+            - FAILED
+            - CANCELLED
+          type: string
+          description: >-
+            INITIAL - The payment is ready for the customer to authorize and
+            approve. <br> PAID - The payment was successfully processed. <br>
+            CANCELLED - The payment was cancelled before the payment processing
+            started. <br> FAILED - The payment failed during payment processing.
+            <br> <br> For payments initiated from the [Refund](#operation/refund) endpoint the only
+            relevant payment status codes are PAID and FAILED.
+        createTime:
+          type: string
+          example: '2020-03-10T11:23:57.917Z'
+        updateTime:
+          type: string
+          example: '2020-03-10T11:23:57.917Z'
+      description: Refund of payment
+    MultibankProvidersResponse:
+      required:
+        - responseCode
+      properties:
+        providers:
+          type: array
+          description: List of external banks that are available for multibank payments.
+          items:
+            $ref: '#/components/schemas/MultibankProvider'
+    MultibankStatus:
+      properties:
+        current:
+          type: string
+          enum:
+            - ENABLED
+            - DISABLED
+            - LIMITED
+          description: >
+            ENABLED - The provider is enabled. <br>
+
+            DISABLED - The provider is currently disabled. <br>
+
+            LIMITED - The provider is currently enabled with limited
+            functionality. <br>
+    MultibankProvider:
+      properties:
+        bankId:
+          type: string
+          description: >-
+            BankId that can be used in the [Browser flow API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API) to start the payment flow with the selected bank.
+        name:
+          type: string
+          description: Name of the bank
+        countryCode:
+          type: string
+          description: ISO 3166-1 Alpha-2 country code of the payment provider bank
+        status:
+          $ref: '#/components/schemas/MultibankStatus'
+    PaymentStatus:
+      type: object
+      required:
+        - amount
+        - paymentId
+        - status
+      properties:
+        paymentId:
+          type: string
+          maxLength: 36
+          description: PaymentId of the payment for which the status query is being made.
+        amount:
+          type: string
+          example: '10.00'
+          description: Payment amount to an accuracy of two decimal places
+        status:
+          enum:
+            - INITIAL
+            - PAID
+            - FAILED
+            - CANCELLED
+          type: string
+          description: >-
+            Status of the payment that was fetched. <br> INITIAL - The payment
+            is ready for the customer to authorize and approve. <br> PAID - The
+            payment was successfully processed. <br> CANCELLED - The payment was
+            cancelled before the payment processing started. <br> FAILED - The
+            payment failed during payment processing.
+        refunds:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundStatus'
+          description: An array of RefundStatus objects.
+        refundOf:
+          type: string
+          description: When payment is refunded this refers to the original paymentId
+        createTime:
+          type: string
+          example: '2020-03-10T11:23:57.917Z'
+        updateTime:
+          type: string
+          example: '2020-03-10T11:23:57.917Z'
+        paymentType:
+          enum:
+            - CREDIT
+            - INVOICE
+            - OTHER_CREDIT
+          type: string
+          description: >
+            CREDIT refers to a payment as an OP credit transfer. INVOICE refers
+            to a payment as an OP Lasku payment.
+
+            OTHER_CREDIT refers to a payment where the transfer is completed by
+            another bank.
+        totalRefundedAmount:
+          type: string
+          example: '10.00'
+          description: Total amount refunded to an accuracy of two decimal places
+        failureReason:
+          description: Obsolete. Use `ErrorType` and `ErrorCode` instead
+          enum:
+            - UnknownError
+            - AuthenticationFailed_CredentialsBlocked
+            - AuthenticationFailed_InvalidCredentials
+            - AuthenticationFailed_CredentialRenewalNeeded
+            - AuthenticationFailed_KeycardRenewalNeeded
+            - AuthenticationFailed_ExternalAuthenticationTimeout
+            - AuthenticationFailed_Timeout
+            - AuthenticationFailed_UserCancelled
+            - AuthenticationFailed_AuthenticationMethodDisabled
+            - PaymentFailed_InsufficientFunds
+            - PaymentFailed_MaximumAmountExceeded
+            - PaymentFailed_DestinationAccountNotFound
+            - PaymentFailed_DestinationAccountInvalid
+            - PaymentFailed_ExecutionDateOutOfRange
+            - PaymentFailed_ExecutionDateNotBankingDay
+            - PaymentFailed_ExecutionTypeNotAvailable
+            - PaymentFailed_DestinationNameInvalid
+            - PaymentFailed_SourceAccountInvalid
+            - PaymentFailed_IdentifierInvalid
+            - PaymentFailed_PaymentNotFoundAtProvider
+            - PaymentFailed_InvalidModel
+            - PaymentFailed_NoPaymentAccounts
+            - PaymentFailed_InvalidCurrency
+          type: string
+        errorType:
+          description: >
+            Overall category for why the payment failed when been OTHER_CREDIT.
+            Can be one of (but not limited to)
+
+            * `LoginErrorType`
+
+            * `PaymentErrorType`
+
+            * `ProviderCallFailed`
+          type: string
+        errorCode:
+          description: >-
+            Error code providing details on the error for why the payment failed
+            when been OTHER_CREDIT.
+          type: string
+      description: Status of single payment
+    RequestEndpoint:
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 2000
+          description: http endpoint URL (http://localhost:port type URL's not accepted) 
+    SuccessEndpoint:
+      description: >-
+        Endpoint where customer's browser is redirected to at the end of the
+        browser flow when the payment was successful. http://localhost:port type URL's not accepted.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RequestEndpoint'
+    RejectEndpoint:
+      description: >-
+        Endpoint where customer's browser is redirected to at the end of the
+        browser flow when the payment failed. http://localhost:port type URL's not accepted.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RequestEndpoint'
+    CancelEndpoint:
+      description: >-
+        Endpoint where customer's browser is redirected to at the end of the
+        browser flow when the payment was cancelled. http://localhost:port type URL's not accepted.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RequestEndpoint'
+    CallbackRequestEndpoint:
+      description: >-
+        Endpoint for [Merchant callback API](https://op-developer.fi/docs/api/6wcXukrFrP1FglcJsNNzYe/Merchant%20callback%20API) notifications. http://localhost:port type URL's not accepted.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RequestEndpoint'
+        - properties:
+            signatureVersion:
+              type: integer
+              description: >-
+                The signature [key version](https://op-developer.fi/p/hmac-authentication) used for
+                signing the merchant callback
+                [notification](https://op-developer.fi/docs/api/6wcXukrFrP1FglcJsNNzYe/Merchant%20callback%20API)
+              format: int32
+    UltimateBeneficiary:
+      properties:
+        BID:
+          type: string
+          format: alphanumeric
+          maxLength: 15
+          description: >
+            Ultimate beneficiary's business ID in Finnish xxxxxxx-x format
+            (y-tunnus). Mandatory if the beneficiary is a payment service
+            provider (PSP), and then the ultimate beneficiary defines the merchant.
+        name:
+          type: string
+          format: alphanumeric
+          maxLength: 35
+          description: >-
+            Ultimate beneficiary name. Mandatory if beneficiary is a payment
+            service provider (PSP).
+        indCode:
+          type: string
+          format: alphanumeric
+          maxLength: 10
+          description: >
+            Ultimate beneficiary's industry classification code. The code format
+            should follow Standard Industrial Classification TOL2008 defined by
+            Statistics Finland.
+
+            Mandatory if the beneficiary is a payment service provider (PSP).
+    ButtonPaymentRefundModel:
+      example:
+        amount: '1.00'
+        currency: EUR
+        reference: RF511459162006
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          example: '10.00'
+          description: >-
+            Amount of the refund to an accuracy of two decimal places. Maximum
+            amount is the amount of the original payment.
+          pattern: ^\d{1,13}\.\d{2}$
+        currency:
+          enum:
+            - EUR
+          type: string
+          description: ISO 4217 currency code of the payment.
+        reference:
+          type: string
+          format: alphanumeric
+          maxLength: 25
+          minLength: 2
+          description: >
+            Reference number without spaces. Finnish national reference format
+            or RF reference. 
+
+            Refund must have reference or message, but not both.
+        message:
+          $ref: '#/components/schemas/RefundMessage'
+      description: ButtonRefundModel
+    ButtonPaymentCreationModel:
+      example:
+        amount: '1.00'
+        cancel:
+          url: https://shop.domain/cancel/path
+        reject:
+          url: https://shop.domain/reject/path
+        return:
+          url: https://shop.domain/return/path
+        currency: EUR
+        accountId: 8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79
+        reference: RF3517834735
+      required:
+        - accountId
+        - amount
+        - currency
+        - reference
+        - return
+        - cancel
+        - reject
+      properties:
+        accountId:
+          type: string
+          format: alphanumeric
+          maxLength: 36
+          description: Unique id for target account
+        amount:
+          type: string
+          example: '10.00'
+          description: Amount of the payment with two decimal precision
+          pattern: ^\d{1,13}\.\d{2}$
+        currency:
+          enum:
+            - EUR
+          type: string
+          description: ISO 4217 currency code of the payment.
+        reference:
+          type: string
+          format: alphanumeric
+          maxLength: 25
+          minLength: 2
+          description: >-
+            Reference number without spaces. Finnish national reference format
+            or RF reference.
+        return:
+          $ref: '#/components/schemas/SuccessEndpoint'
+        cancel:
+          $ref: '#/components/schemas/CancelEndpoint'
+        reject:
+          $ref: '#/components/schemas/RejectEndpoint'
+        message:
+          $ref: '#/components/schemas/Message'
+        language:
+          enum:
+            - fi
+            - sv
+            - en
+          type: string
+          description: >-
+            ISO 639-1 Code. fi = Finnish, sv = Swedish, en = English. Finnish is
+            the default language.
+        b2bBackend:
+          $ref: '#/components/schemas/CallbackRequestEndpoint'
+        messageToCustomer:
+          type: string
+          format: alphanumeric with spaces
+          maxLength: 500
+          deprecated: true
+          description: >-
+            Beneficiary message to customer. Will not be shown in customer's
+            balance sheet, but shown in payment page.
+        ultimateBeneficiary:
+          $ref: '#/components/schemas/UltimateBeneficiary'
+      description: Contains new payment creation information
+    ButtonPaymentErrorResponseModel:
+      properties:
+        Id:
+          type: string
+          description: Unique ID for the error event.
+          example: e9a700e8-fb33-48df-97ca-1a9fca848dc0
+        level:
+          type: string
+          enum:
+            - WARN
+            - ERROR
+            - FATAL
+          example: WARN
+        type:
+          type: string
+          enum:
+            - VALIDATION
+            - TECHNICAL
+            - BUSINESS
+            - SECURITY
+          example: VALIDATION
+          description: >-
+            Error type. Errors of type BUSINESS may include additional response
+            fields for business specific error details.
+        message:
+          type: string
+          description: >-
+            Error description as human-readable text. Intended for helping
+            technical problem diagnostics (not meant for end-user / customer
+            consumption).
+          example: 'Failed to validate amount: -2.00'
+      description: Payment button error response model
+    ButtonPaymentRefundResponseModel:
+      required:
+        - paymentId
+        - totalRefundedAmount
+      properties:
+        paymentId:
+          type: string
+          maxLength: 36
+          description: >-
+            unique id for the refund. This id can be used to retrieve refund
+            status from the payments status endpoint
+        totalRefundedAmount:
+          type: string
+          example: '10.00'
+          description: Total amount refunded to an accuracy of two decimal places
+      description: Refund response model - result of refund operation
+    ButtonPaymentCreationResponseModel:
+      required:
+        - paymentId
+        - paymentOperationId
+        - paymentOperationValidation
+      properties:
+        paymentId:
+          type: string
+          maxLength: 36
+          description: >
+            Unique ID for the payment. Acts as a unique identifier for the
+            payment in further payment operations. This ID can be used to
+            retrieve payment status and refund a payment.
+
+            If the value is not stored for later use, these operations will not
+            be possible.
+        paymentOperationId:
+          type: string
+          maxLength: 128
+          description: >
+            Unique ID for the payment operation. It is used in customer browser
+            redirects described in the [Browser flow
+            API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API)
+        paymentOperationValidation:
+          type: string
+          maxLength: 512
+          description: >
+            Signature for the paymentOperationId. It is used in customer browser
+            redirects described in the [Browser flow
+            API](https://op-developer.fi/docs/api/42YdbF075u7BSKj56dTL21/Browser%20Flow%20API)
+      description: Payment creation response model - result of button payment initiation

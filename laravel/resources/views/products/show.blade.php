@@ -1,6 +1,6 @@
-<!-- resources/views/products/show.blade.php -->
-
 @extends('layouts.app')
+
+<!-- resources/views/products/show.blade.php -->
 
 @section('title', htmlspecialchars($product->name))
 
@@ -21,27 +21,22 @@
             <div class="product-info">
                 <h1 class="product-title"><strong>Product name:</strong> {{ htmlspecialchars($product->name) }}</h1>
 
-                <!-- Артикул -->
                 @if ($product->article)
                     <p class="product-article"><strong>Article:</strong> {{ htmlspecialchars($product->article) }}</p>
                 @endif
 
-                <!-- Бренд -->
                 @if ($product->brand)
                     <p class="product-brand"><strong>Brand:</strong> {{ htmlspecialchars($product->brand) }}</p>
                 @endif
 
-                <!-- Категория -->
                 @if ($product->category)
                     <p class="product-category"><strong>Category:</strong> {{ htmlspecialchars($product->category) }}</p>
                 @endif
 
-                <!-- Страна -->
                 @if ($product->country)
                     <p class="product-country"><strong>Country:</strong> {{ htmlspecialchars($product->country) }}</p>
                 @endif
 
-                <!-- Описание -->
                 @if ($product->description)
                     <p class="product-description">{{ htmlspecialchars($product->description) }}</p>
                 @else
@@ -58,11 +53,11 @@
                     @endif
                 </p>
 
-                <form id="add-to-cart-form" action="{{ route('cart.add', $product->brand) }}" method="POST"> <!-- NEW: Изменено с $product->id на $product->brand -->
+                <form id="add-to-cart-form" action="{{ route('cart.add', $product->brand) }}" method="POST">
                     @csrf
                     <div class="input-group mb-3 quantity-control">
                         <button type="button" class="btn btn-outline-secondary">−</button>
-                        <input type="number" name="quantity" class="form-control text-center" value="1" min="1" max="10" readonly>
+                        <input type="number" name="quantity" class="form-control text-center" value="1" min="1" max="10">
                         <button type="button" class="btn btn-outline-secondary">+</button>
                     </div>
                     <button type="submit" class="btn btn-primary add-to-cart-btn">Add to Cart</button>
@@ -94,6 +89,29 @@
         </div>
     </div>
 
+    <!-- Стили -->
     <link href="{{ asset('css/product_show.css') }}" rel="stylesheet">
-    <script src="{{ asset('js/product_show.js') }}" defer></script>
+
+    <!-- Встроенный JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const minusBtn = document.querySelector('.quantity-control button:first-child');
+            const plusBtn = document.querySelector('.quantity-control button:last-child');
+            const quantityInput = document.querySelector('.quantity-control input[name="quantity"]');
+
+            minusBtn.addEventListener('click', function () {
+                let value = parseInt(quantityInput.value);
+                if (value > parseInt(quantityInput.min)) {
+                    quantityInput.value = value - 1;
+                }
+            });
+
+            plusBtn.addEventListener('click', function () {
+                let value = parseInt(quantityInput.value);
+                if (value < parseInt(quantityInput.max)) {
+                    quantityInput.value = value + 1;
+                }
+            });
+        });
+    </script>
 @endsection
