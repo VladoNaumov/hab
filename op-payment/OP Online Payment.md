@@ -1,4 +1,10 @@
-Хорошо, я изучил документацию OP Online Payment REST API по ссылке (https://op-developer.fi/products/banking/docs/rest-api) и объясню на пальцах, как это работает, особенно в контексте твоего вопроса про передачу секретной информации в POST-запросах, заголовках и строгом порядке данных.
+### документацию OP Online Payment REST API
+- https://op-developer.fi/docs#for-developers
+- https://op-developer.fi/p/hmac-authentication
+- https://op-developer.fi/products/banking/docs/rest-api
+- https://op-developer.fi/products/banking/docs/browser-flow-api
+- https://op-developer.fi/products/banking/docs/merchant-callback-api
+- https://op-developer.fi/
 
 ### Что такое OP Online Payment REST API?
 Это API от OP Financial Group (финская банковская группа) для обработки онлайн-платежей. Оно позволяет мерчантам (продавцам) и провайдерам платежных услуг инициировать платежи, запрашивать статус платежей и делать возвраты. API состоит из трёх частей:
