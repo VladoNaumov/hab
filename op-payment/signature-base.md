@@ -4,14 +4,14 @@
 Должна формироваться на основе следующих данных:
 
 ```
-HTTP-метод: POST
+HTTP Method: POST
 Content-Type: application/json
-Дата и время в формате GMT: Wed, 06 Apr 2020 06:09:55 GMT
-Идентификатор запроса: f8cef553-77df-48cc-bd1c-fb05dcfb64fa
-API-ключ: dxB2AFwnwraQRrAsLZpJ5T4IrNGp7fhx
-Идентификатор мерчанта: 1ec65769-2d9c-4cc8-8031-7327747c4d4c
-Идентификатор аккаунта: b35e55a2-ef71-4675-b8cb-a154c650843b
-URL эндпоинта: https://sandbox.apis.op.fi/paymentbutton/v1/payments
+Date and Time in GMT: Wed, 06 Apr 2020 06:09:55 GMT
+Request ID: f8cef553-77df-48cc-bd1c-fb05dcfb64fa
+API Key: dxB2AFwnwraQRrAsLZpJ5T4IrNGp7fhx
+Merchant ID: 1ec65769-2d9c-4cc8-8031-7327747c4d4c
+Account ID: b35e55a2-ef71-4675-b8cb-a154c650843b
+Endpoint URL: https://sandbox.apis.op.fi/paymentbutton/v1/payments
 
 Тело запроса (JSON):
 json
