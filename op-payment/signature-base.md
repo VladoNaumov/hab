@@ -36,6 +36,8 @@ json
 Подпись добавляется в заголовки:
 Обычно в заголовок X-Signature или Authorization.
 
+
+### Signature base:
 ```
 POST
 application/json
