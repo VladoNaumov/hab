@@ -6,6 +6,29 @@
 - https://op-developer.fi/products/banking/docs/merchant-callback-api
 - https://op-developer.fi/
 
+
+### Signature base:
+``` 
+POST
+application/json
+Wed, 06 Apr 2020 06:09:55 GMT
+f8cef553-77df-48cc-bd1c-fb05dcfb64fa
+dxB2AFwnwraQRrAsLZpJ5T4IrNGp7fhx
+1ec65769-2d9c-4cc8-8031-7327747c4d4c
+b35e55a2-ef71-4675-b8cb-a154c650843b
+https://sandbox.apis.op.fi/paymentbutton/v1/payments
+{	
+	"reference":"1234567978",
+	"amount":"1.00",
+	"currency":"EUR",
+	"accountId":"8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79",
+	"return":{"url":"https:\/\/shop.domain\/return\/path"},
+	"cancel":{"url":"https:\/\/shop.domain\/cancel\/path"},
+	"reject":{"url":"https:\/\/shop.domain\/reject\/path"}
+}
+```
+
+
 ### Что такое OP Online Payment REST API?
 Это API от OP Financial Group (финская банковская группа) для обработки онлайн-платежей. Оно позволяет мерчантам (продавцам) и провайдерам платежных услуг инициировать платежи, запрашивать статус платежей и делать возвраты. API состоит из трёх частей:
 - **REST API**: для создания платежей, возвратов и проверки статуса.
