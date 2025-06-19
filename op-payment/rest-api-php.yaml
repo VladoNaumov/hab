@@ -127,6 +127,9 @@ info:
     #### Changed
     - Deprecated request parameter `messageToCustomer` in endpoint [Create payment](#operation/newPayment)
     
+    ### v1.3 (03/2024)
+    #### Added
+
   contact:
     name: Support
     email: onlinepayment@op.fi
@@ -134,115 +137,98 @@ info:
 servers:
   - url: https://sandbox.apis.op.fi/paymentbutton
 
+paths:
+  /v1/payments:
+    post:
+      summary: Create payment
+      description: >
+        Initiates an online payment process to collect a payment from customer.
 
-- lang: "PHP"
-          source: |
-            <?php
-            /******************************************************************************
-            
-              OP Online Payment - REST API - Create payment PHP code example
-            
-              This is an example PHP script for using Create payment endpoint.
-            
-              Note, This code assumes that you have the guzzlehttp/guzzle and Ramsey/uuid
-              packages installed for making HTTP requests and using uuid:s!
-              You can install them with Composer:
-            
-                composer require guzzlehttp/guzzle
-                composer require ramsey/uuid
-            
-                (Make sure you have installed php curl extension)
-            
-              You also need to have registered a developer application and to have generated
-              a valid API key & API secret in OP Developer.
-            
-            *******************************************************************************/
-            
-            require 'vendor/autoload.php';
-            
-            use GuzzleHttp\Client;
-            use GuzzleHttp\Exception\GuzzleException;
-            use GuzzleHttp\RequestOptions;
-            use Ramsey\Uuid\Uuid;
-            
-            // Credentials
-            $apiKey = "TODO: your API key";                   // API key created in OP Developer
-            $privateKeyFile = "TODO: your private key file";  // The sandbox will recognise signatures generated with the private key used on the OP Developer HMAC instructions page
-            $merchantId = "TODO: your merchant ID";           // Sample Merchant ID in sandbox available on the OP Developer HMAC instructions page
-            
-            // Host details
-            $server = "https://sandbox.apis.op.fi";
-            $path = "/paymentbutton/v1/payments";
-            $url = $server . $path;
-            
-            // Initialize client
-            $client = new Client([
-                'base_uri' => $server
-            ]);
-            
-            ### 1. Initiate Online Payment process
-            echo "1. Initiating an Online Payment payment process...\n";
-            
-            // ###########
-            // New payment
-            // ###########
-            $date = new DateTime('UTC');
-            $formattedDate = $date->format('D, d M Y H:i:s \G\M\T');
-            
-            $requestId = Uuid::uuid4()->toString();
-            $sessionId = Uuid::uuid4()->toString();
-            
-            $paymentDetails = [
-                'amount' => '1.00',
-                'cancel' => ['url' => 'https://shop.example.com/cancel/path'],
-                'reject' => ['url' => 'https://shop.example.com/reject/path'],
-                'return' => ['url' => 'https://shop.example.com/return/path'],
-                'currency' => 'EUR',
-                'accountId' => '8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79',
-                'reference' => 'RF3517834735'
-            ];
-            $payload = json_encode($paymentDetails);
-            
-            // Load the private key
-            $privateKey = openssl_pkey_get_private("file://$privateKeyFile");
-            
-            $stringToSign = "POST" . "\n"
-            . "application/json" . "\n"
-            . $formattedDate . "\n"
-            . $merchantId . "\n"
-            . $apiKey . "\n"
-            . $sessionId . "\n"
-            . $requestId. "\n"
-            . $url . "\n"
-            . $payload;
-            
-            openssl_sign($stringToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256);
-            
-            // Constructing the Authorization header
-            $algorithm = 1; // For SHA-256
-            $keyVersion = 0; // Example version, adjust as necessary
-            $authorizationHeader = $merchantId . ':' . $algorithm . ':' . $keyVersion . ':' . bin2hex($signature);
-            
-            $header = [
-                'Authorization' => $authorizationHeader,
-                'Date' => $formattedDate,
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'x-session-id' => $sessionId,
-                'x-request-id' => $requestId,
-                'x-api-key' => $apiKey,
-            ];
-            
-            // Make the request
-            try {
-                $response = $client->post($path, [
-                    'headers' => $header,
-                    'body' => $payload
-                ]);
-                echo "Response: " . $response->getStatusCode() . " " . $response->getReasonPhrase() . "\n";
-                $responseArray = json_decode($response->getBody(), true);
-                echo json_encode($responseArray, JSON_PRETTY_PRINT);
-            } catch (GuzzleException $e) {
-                echo "Request failed: " . $e->getMessage() . "\n";
-            }
-            ?>
+        The return, cancel and reject urls are used as browser redirect
+        addresses in the customer’s browser flow. Depending on the outcome of
+        the payment flow, the customer’s browser is directed to one of these addresses from the OP
+        Online payment service.
+      operationId: newPayment
+      tags:
+        - Payments
+      parameters:
+        - $ref: '#/components/parameters/x-session-id'
+        - $ref: '#/components/parameters/x-request-id'
+        - $ref: '#/components/parameters/date'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButtonPaymentCreationModel'
+        description: Payment info
+        required: true
+      responses:
+        '200':
+          description: OK. Payment created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentCreationResponseModel'
+              examples:
+                response:
+                  value:
+                    paymentId: 8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79
+                    paymentOperationId: >-
+                      a2697d49-30ec-4d50-b08b-459b73e7872d2e133836-8bfa-440c-a0b0-9f38613897b4
+                    paymentOperationValidation: >-
+                      MEUCIBNNSSslt+JUCCi/N7vwyoBzgbjekyvafeQvsItlAg0mAiEAjZC5RBFRf+hs6dOMfes/mz7jN6Fo69PxpnblXCnuEmw=
+        '400':
+          description: >-
+            Bad request. Invalid request parameters or business rules prevent
+            the request from being processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButtonPaymentErrorResponseModel'
+              examples:
+                response:
+                  value:
+                    Id: 2e80f2f9-b31f-48e5-958c-b250281c1b00
+                    level: WARN
+                    type: VALIDATION
+                    message: 'Failed to validate amount: -2.00'
+        '401':
+          description: Unauthorized. Request could not be authenticated.
+        '403':
+          description: Forbidden. Request could not be authorized.
+        '500':
+          description: >-
+            Internal server error. Request could not be processed due to a
+            temporary technical issue.
+      security:
+        - xApiKey: [ ]
+          Authorization: [ ]
+      x-codeSamples:
+        - lang: cURL
+          label: CLI
+          source: >
+            curl --request POST \
+            --url 'https://sandbox.apis.op.fi/paymentbutton/v1/payments' \
+            --header 'Content-Type: application/json' \
+            --header 'Date: Tue, 02 Nov 2021 14:21:35 GMT' \
+            --header 'x-request-id: 705dd962-bba6-453d-9024-554c16d11773' \
+            --header 'x-session-id: 70eb1427-cfa1-40b6-a188-7e793163a196' \
+            --header 'x-api-key: 3AL1...' \
+            --header 'Authorization:
+            c3efaaee-a6bb-449f-9213-e45e23a462ef:1:1:767cc232ea0df...' \
+
+            --data '{
+              "accountId": "8a5d4aac-8f8f-47ed-ae2f-36ffeaf57c79",
+              "amount": "1.00",
+              "currency": "EUR",
+              "reference": "RF1413750465311063845747",
+              "return": {
+                "url": "https://shop.domain/return/path"
+              },
+              "cancel": {
+                "url": "https://shop.domain/cancel/path"
+              },
+              "reject": {
+                "url": "https://shop.domain/reject/path"
+              }
+            }'
