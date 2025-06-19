@@ -1,4 +1,0 @@
-<FilesMatch "(debug\.log|notifications\.log|test_dns\.log|curl_verbose\.log)">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
